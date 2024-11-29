@@ -8,9 +8,9 @@ protodunehd_genie.FluxSearchPaths: "/exp/dune/data/users/chasnip/ProtoDUNESimula
 protodunehd_genie.FluxFiles: ["gsimple_*.root"]
 protodunehd_genie.FluxCopyMethod: "DIRECT"
 protodunehd_genie.TopVolume: "volCryostat"
-protodunehd_genie.FiducialCut: "mbox:-360,0,0,360,607,460"
+protodunehd_genie.FiducialCut: "mbox:-360.,0.,0.,360.,607.5,465."
 protodunehd_genie.EventsPerSpill: 1
-protodunehd_genie.POTPerSpill: 0
+protodunehd_genie.POTPerSpill: 0 # 4.2e13 # assumed protons per spill at SPS
 #protodunehd_genie.GenFlavors: [14] #pdg codes of flux generator neutrino flavors
 #protodunehd_genie.GenFlavors: [-14] #pdg codes of flux generator neutrino flavors
 #protodunehd_genie.GenFlavors: [12] #pdg codes of flux generator neutrino flavors

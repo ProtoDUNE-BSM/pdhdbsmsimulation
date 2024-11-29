@@ -1,0 +1,9 @@
+BEGIN_PROLOG
+
+pdhdtagenfilter: {
+  module_type: "PDHDTAGenFilter"
+  InputTag: "tamakerTPC"
+  Debug: true
+}
+
+END_PROLOG

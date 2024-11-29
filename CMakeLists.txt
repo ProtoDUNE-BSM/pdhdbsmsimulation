@@ -43,6 +43,8 @@ cet_report_compiler_flags()
 find_ups_product( larsoft )
 find_ups_product( nutools )
 find_ups_product( art )
+find_ups_product( artdaq_core )
+find_ups_product( dunedetdataformats )
 find_ups_product( cetbuildtools ) # LIBRARY_OUTPUT_DIRECTORY, etc.
 
 # macros for dictionary and simple_plugin

@@ -16,6 +16,9 @@ art_make(BASENAME_ONLY
 	art::Framework_Principal
 	art::Framework_Services_Registry
 	art::Persistency_Common
+  lardataobj::RawData
+  artdaq_core::artdaq-core_Data
+  artdaq_core::artdaq-core_Utilities
 	canvas::canvas
 	messagefacility::MF_MessageLogger
 	hep_concurrency

@@ -68,3 +68,15 @@ outputs:
 }
 
 physics.producers.generator.FluxSearchPaths: "/exp/dune/data/users/chasnip/ProtoDUNESimulation/ProtoDUNEGSimpleNuFluxes/wnp04"
+#physics.producers.generator.FluxFiles: ["gsimple_14_*.root"]
+#physics.producers.generator.FluxFiles: ["gsimple_14_*_130_3body_*.root"]
+#physics.producers.generator.FluxFiles: ["gsimple_14_*_211_2body_*.root"]
+#physics.producers.generator.FluxFiles: ["gsimple_14_*_310_3body_*.root"]
+#physics.producers.generator.FluxFiles: ["gsimple_14_*_321_2body_*.root"]
+physics.producers.generator.FluxFiles: ["gsimple_14_*_321_3body_*.root"]
+#physics.producers.generator.FluxFiles: ["gsimple_12_*_130_3body_*.root"]
+#physics.producers.generator.FluxFiles: ["gsimple_12_*_211_2body_*.root"]
+#physics.producers.generator.FluxFiles: ["gsimple_12_*_310_3body_*.root"]
+#physics.producers.generator.FluxFiles: ["gsimple_12_*_321_2body_*.root"]
+#physics.producers.generator.FluxFiles: ["gsimple_12_*_321_3body_*.root"]
+physics.producers.generator.GenFlavors: [14]

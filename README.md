@@ -1,4 +1,4 @@
-# LArSoftDataTools
+# LArSoftSimulationTools
 LArSoft product to handle data processing of PD-HD data from hdf5 format to reconstructed art::ROOT files.
 
 ## Apptainer Container
@@ -19,7 +19,7 @@ And this command when on lxplus (they are the same command, just different direc
 You need to set up LArSoft, dunesw, pull the code from GitHub and create your development area. Follow this script:
 
 ```
-VERSION=v09_91_03d00
+VERSION=v10_01_03d00
 QUALS=e26:prof
 DIRECTORY=protodunedm_mc_simulation
 export WORKDIR=/exp/dune/app/users/$USER/ # or on lxplus /afs/cern.ch/work/c/${USER}/public/
@@ -39,6 +39,9 @@ source ${WORKDIR}/${DIRECTORY}/localProducts*/setup
 # Clone LArSoftDataTools from ProtoDUNE-BSM GitHub
 mrb g https://github.com/ProtoDUNE-BSM/LArSoftSimulationTools.git
 
+# You may want to also include the trigger simulation software
+mrb g https://github.com/wesketchum/dunetrigger.git@develop
+
 cd ${MRB_BUILDDIR}
 
 mrbsetenv
@@ -50,7 +53,7 @@ mrbslp
 Once the development area has been created you can set up the environment withe following script:
 
 ```
-VERSION=v09_91_03d00
+VERSION=v10_01_03d00
 QUALS=e26:prof
 
 source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
