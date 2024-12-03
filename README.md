@@ -37,9 +37,9 @@ mrb newDev -v ${VERSION} -q ${QUALS}
 source ${WORKDIR}/${DIRECTORY}/localProducts*/setup
 
 # Clone LArSoftDataTools from ProtoDUNE-BSM GitHub
-mrb g https://github.com/ProtoDUNE-BSM/LArSoftSimulationTools.git
+mrb g https://github.com/ProtoDUNE-BSM/pdhdbsmsimulation.git
 
-# You may want to also include the trigger simulation software
+# You may want to also include the trigger emulation software
 mrb g https://github.com/wesketchum/dunetrigger.git@develop
 
 cd ${MRB_BUILDDIR}
@@ -63,3 +63,43 @@ echo $DUNESW_DIR
 source localProducts_*/setup
 mrbslp
 ```
+
+## Simulation Workflow
+
+The simulation follows the typical LArSoft simulation workflow. Custom configuration files are used for generate, reconstruction and the 1st stage of the detector simulation. The process is:
+```
+Generator -> GEANT4 -> Detsim -> Reconstruction
+```
+This workflow is produce a neutrino interaction with cosmic and radiological backgrounds. The fcl file `prod_beamneutrino_cosmic_protodunehd.fcl` reads in a neutrino flux file and generates a neutrino, cosmics and radioactivity. The following commands can be run online to generate a sample of neutrino events in PD-HD and process them to reconstruction.
+
+```
+#!/bin/bash
+
+NEVENTS=10
+
+lar -c srcs/pdhdbsmsimulation/example/prod_beamneutrino_cosmic_protodunehd.fcl -n ${NEVENTS} -o nugen.root
+
+lar -c standard_g4_protodunehd_stage1.fcl -n ${NEVENTS} -o nug41.root -s nugen.root
+
+lar -c standard_g4_protodunehd_stage2.fcl -n ${NEVENTS} -o nug42.root -s nug41.root
+
+lar -c srcs/pdhdbsmsimulation/example/standard_detsim_protodunehd_stage1_edit.fcl -n ${NEVENTS} -o nudetsim1.root -s nug42.root
+
+lar -c standard_detsim_protodunehd_stage2.fcl -n ${NEVENTS} -o nudetsim2.root -s nudetsim1.root
+
+lar -c srcs/pdhdbsmsimulation/example/example/runPandoraNeutrino.fcl -n ${NEVENTS} -o nureco.root -s nudetsim2.root
+```
+The custom detsim fcl file `standard_detsim_protodunehd_stage1_edit.fcl` is needed due to a bug in the v10 dunesw.
+
+# Neutrino Flux Files.
+
+The neutrino generator requires fluxes. These are provided in the form of GSimpleNtpFlux files. You can find some documentation [here](https://cdcvs.fnal.gov/redmine/projects/nutools/wiki/GENIEHelper_Flux). One issue with this flux file format is: "It is important that users not mix gsimple files that were created with different flux windows and/or different POTs/file; doing so may lead to incorrect overall POT accounting when generating GENIE events."
+
+Many of the gsimple files currently do have different POTs/file. Therefore, a separate gsimple exists for each wobbling configuration, neutrino flavour and hadron decay mode combination. A configuration file system has been set up that allows the user to choose the flux file they want. in `` you can find the parameters:
+```
+physics.producers.generator.FluxFiles: [@local::wnp04.nue.decaymode[4]]
+physics.producers.generator.GenFlavors: [@local::wnp04.nue.pdg]
+```
+So the user can change the wobbing configuration `wnp04, w133 or w000`, the neutrino flavour `numu, nue, numubar and nuebar` and decay mode `0, 1, 2, 3 or 4` (for numu/nue, 0-2 for numubar/nuebar). It is possible to load all the gsimple files at once, but the GENIE POT counting might be wrong.
+
+There are bash scripts included in the `test` directory that shows how a bash script could be used to run all the different flux configurations. The bash scripts use `sed` to edit the parameters `physics.producers.generator.FluxFiles` and `physics.producers.generator.GenFlavors`. The script `OnlineGenJob.sh` should loop though the different flux configurations and generate MC samples for each.

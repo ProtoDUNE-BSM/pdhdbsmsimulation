@@ -1,17 +1,21 @@
+#include "services_refactored_pdune.fcl"
+#
+#include "singles_dune.fcl"
+#include "corsika_protodune.fcl"
 #include "genie_protodunehd.fcl"
-#include "services_dune.fcl"
+#include "dune_radiological_model_decay0.fcl"
 
 process_name: GenieGen
 
 services:
 {
   # Load the service that manages root files for histograms.
-  TFileService: { fileName: "genie_hist.root" }
-  TimeTracker:       {}
-  MemoryTracker:         { } # default is one
+  TFileService: { fileName: "prod_beamneutrino_cosmics_protodunehd_hist.root" }
+  TimeTracker:       @local::dune_time_tracker
+  MemoryTracker:     @local::dune_memory_tracker
   RandomNumberGenerator: {} #ART native random number generator
   FileCatalogMetadata:  @local::art_file_catalog_mc
-  @table::protodunehd_simulation_services
+  @table::protodunehd_refactored_simulation_services
   IFDH: {}
 }
 
@@ -20,7 +24,7 @@ source:
 {
   module_type: EmptyEvent
   timestampPlugin: { plugin_type: "GeneratedEventTimestamp" }
-  maxEvents:   10          # Number of events to create
+  maxEvents:   10
   firstRun:    1           # Run number to use for this file
   firstEvent:  1           # number of first event in the file
 }
@@ -34,13 +38,17 @@ physics:
  producers:
  {
    generator: @local::protodunehd_genie
-   rns:       { module_type: "RandomNumberSaver" }
+   cosmicgenerator: @local::protodune_corsika_cmc
+   ar39:             @local::dune10kt_39Ar_in_LAr
+   kr85:             @local::dune10kt_85Kr_in_LAr
+   ar42:             @local::dune10kt_42Ar_in_LAr
+   k42fromar42:      @local::dune10kt_42Kfrom42Ar_in_LAr
  }
 
+
  #define the producer and filter modules for this path, order matters, 
- #filters reject all following items.  see lines starting physics.producers below
- simulate: [ rns, generator ]
- 
+ simulate: [ generator, cosmicgenerator, ar39, ar42, kr85, k42fromar42 ]
+
  #define the output stream, there could be more than one if using filters 
  stream1:  [ out1 ]
 
@@ -61,22 +69,12 @@ outputs:
  out1:
  {
    module_type: RootOutput
-   fileName:    "genie_gen.root" #default file name, can override from command line with -o or --output
-   dataTier:    "generated"
+   fileName:  "prod_beamneutrino_cosmics_protodunehd.root" #default file name, can override from command line with -o or --output
+   dataTier: "generated"
    compressionLevel: 1
  }
 }
 
-#physics.producers.generator.FluxSearchPaths: "/exp/dune/data/users/chasnip/ProtoDUNESimulation/ProtoDUNEGSimpleNuFluxes/wnp04"
-#physics.producers.generator.FluxFiles: ["gsimple_14_*.root"]
-#physics.producers.generator.FluxFiles: ["gsimple_14_*_130_3body_*.root"]
-#physics.producers.generator.FluxFiles: ["gsimple_14_*_211_2body_*.root"]
-#physics.producers.generator.FluxFiles: ["gsimple_14_*_310_3body_*.root"]
-#physics.producers.generator.FluxFiles: ["gsimple_14_*_321_2body_*.root"]
-#physics.producers.generator.FluxFiles: ["gsimple_14_*_321_3body_*.root"]
-#physics.producers.generator.FluxFiles: ["gsimple_12_*_130_3body_*.root"]
-#physics.producers.generator.FluxFiles: ["gsimple_12_*_211_2body_*.root"]
-#physics.producers.generator.FluxFiles: ["gsimple_12_*_310_3body_*.root"]
-#physics.producers.generator.FluxFiles: ["gsimple_12_*_321_2body_*.root"]
-#physics.producers.generator.FluxFiles: ["gsimple_12_*_321_3body_*.root"]
-#physics.producers.generator.GenFlavors: [14]
+# Set neutrino GENIE generator parameters
+physics.producers.generator.FluxFiles: [@local::wnp04.nue.decaymode[4]]
+physics.producers.generator.GenFlavors: [@local::wnp04.nue.pdg]

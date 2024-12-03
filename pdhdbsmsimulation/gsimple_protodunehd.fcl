@@ -1,0 +1,135 @@
+BEGIN_PROLOG
+
+wnp04: 
+{
+  numu: 
+  {
+    pdg: 14
+    decaymode: [
+      "wnp04/gsimple_14_fluxes_from_130_3body_decay_wnp04_XY_final.root",
+      "wnp04/gsimple_14_fluxes_from_211_2body_decay_wnp04_XY_final.root",
+      "wnp04/gsimple_14_fluxes_from_310_3body_decay_wnp04_XY_final.root",
+      "wnp04/gsimple_14_fluxes_from_321_2body_decay_wnp04_XY_final.root",
+      "wnp04/gsimple_14_fluxes_from_321_3body_decay_wnp04_XY_final.root"
+    ]
+  }
+  nue: 
+  {
+    pdg: 12
+    decaymode: [
+      "wnp04/gsimple_12_fluxes_from_130_3body_decay_wnp04_XY_final.root",
+      "wnp04/gsimple_12_fluxes_from_211_2body_decay_wnp04_XY_final.root",
+      "wnp04/gsimple_12_fluxes_from_310_3body_decay_wnp04_XY_final.root",
+      "wnp04/gsimple_12_fluxes_from_321_2body_decay_wnp04_XY_final.root",
+      "wnp04/gsimple_12_fluxes_from_321_3body_decay_wnp04_XY_final.root"
+    ]
+  }
+  numubar: 
+  {
+    pdg: -14
+    decaymode: [
+      "wnp04/gsimple_-14_fluxes_from_-211_2body_decay_wnp04_XY_final.root",
+      "wnp04/gsimple_-14_fluxes_from_-321_2body_decay_wnp04_XY_final.root",
+      "wnp04/gsimple_-14_fluxes_from_-321_3body_decay_wnp04_XY_final.root"
+    ]
+  }
+  nuebar: 
+  {
+    pdg: -12
+    decaymode: [
+      "wnp04/gsimple_-12_fluxes_from_-211_2body_decay_wnp04_XY_final.root",
+      "wnp04/gsimple_-12_fluxes_from_-321_2body_decay_wnp04_XY_final.root",
+      "wnp04/gsimple_-12_fluxes_from_-321_3body_decay_wnp04_XY_final.root"
+    ]
+  }
+}
+
+w133: 
+{
+  numu: 
+  {
+    pdg: 14
+    decaymode: [
+      "w133/gsimple_14_fluxes_from_130_3body_decay_w133_XY_final.root",
+      "w133/gsimple_14_fluxes_from_211_2body_decay_w133_XY_final.root",
+      "w133/gsimple_14_fluxes_from_310_3body_decay_w133_XY_final.root",
+      "w133/gsimple_14_fluxes_from_321_2body_decay_w133_XY_final.root",
+      "w133/gsimple_14_fluxes_from_321_3body_decay_w133_XY_final.root"
+    ]
+  }
+  nue: 
+  {
+    pdg: 12
+    decaymode: [
+      "w133/gsimple_12_fluxes_from_130_3body_decay_w133_XY_final.root",
+      "w133/gsimple_12_fluxes_from_211_2body_decay_w133_XY_final.root",
+      "w133/gsimple_12_fluxes_from_310_3body_decay_w133_XY_final.root",
+      "w133/gsimple_12_fluxes_from_321_2body_decay_w133_XY_final.root",
+      "w133/gsimple_12_fluxes_from_321_3body_decay_w133_XY_final.root"
+    ]
+  }
+  numubar: 
+  {
+    pdg: -14
+    decaymode: [
+      "w133/gsimple_-14_fluxes_from_-211_2body_decay_w133_XY_final.root",
+      "w133/gsimple_-14_fluxes_from_-321_2body_decay_w133_XY_final.root",
+      "w133/gsimple_-14_fluxes_from_-321_3body_decay_w133_XY_final.root"
+    ]
+  }
+  nuebar: 
+  {
+    pdg: -12
+    decaymode: [
+      "w133/gsimple_-12_fluxes_from_-211_2body_decay_w133_XY_final.root",
+      "w133/gsimple_-12_fluxes_from_-321_2body_decay_w133_XY_final.root",
+      "w133/gsimple_-12_fluxes_from_-321_3body_decay_w133_XY_final.root"
+    ]
+  }
+}
+
+w000: 
+{
+  numu: 
+  {
+    pdg: 14
+    decaymode: [
+      "w000/gsimple_14_fluxes_from_130_3body_decay_w000_XY_final.root",
+      "w000/gsimple_14_fluxes_from_211_2body_decay_w000_XY_final.root",
+      "w000/gsimple_14_fluxes_from_310_3body_decay_w000_XY_final.root",
+      "w000/gsimple_14_fluxes_from_321_2body_decay_w000_XY_final.root",
+      "w000/gsimple_14_fluxes_from_321_3body_decay_w000_XY_final.root"
+    ]
+  }
+  nue: 
+  {
+    pdg: 12
+    decaymode: [
+      "w000/gsimple_12_fluxes_from_130_3body_decay_w000_XY_final.root",
+      "w000/gsimple_12_fluxes_from_211_2body_decay_w000_XY_final.root",
+      "w000/gsimple_12_fluxes_from_310_3body_decay_w000_XY_final.root",
+      "w000/gsimple_12_fluxes_from_321_2body_decay_w000_XY_final.root",
+      "w000/gsimple_12_fluxes_from_321_3body_decay_w000_XY_final.root"
+    ]
+  }
+  numubar: 
+  {
+    pdg: -14
+    decaymode: [
+      "w000/gsimple_-14_fluxes_from_-211_2body_decay_w000_XY_final.root",
+      "w000/gsimple_-14_fluxes_from_-321_2body_decay_w000_XY_final.root",
+      "w000/gsimple_-14_fluxes_from_-321_3body_decay_w000_XY_final.root"
+    ]
+  }
+  nuebar: 
+  {
+    pdg: -12
+    decaymode: [
+      "w000/gsimple_-12_fluxes_from_-211_2body_decay_w000_XY_final.root",
+      "w000/gsimple_-12_fluxes_from_-321_2body_decay_w000_XY_final.root",
+      "w000/gsimple_-12_fluxes_from_-321_3body_decay_w000_XY_final.root"
+    ]
+  }
+}
+
+END_PROLOG
