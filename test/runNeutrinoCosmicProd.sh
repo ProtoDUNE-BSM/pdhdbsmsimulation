@@ -54,4 +54,4 @@ lar -c ${WORKDIR}/${SRCS}/standard_detsim_protodunehd_stage1_edit.fcl -n ${NEVEN
 wait
 lar -c standard_detsim_protodunehd_stage2.fcl -n ${NEVENTS} -o ${OUTDIR}/${DET2} -s "${OUTDIR}/${DET1}"
 wait
-lar -c ${WORKDIR}/${SRCS}/example/runPandoraNeutrino.fcl -n ${NEVENTS} -o ${OUTDIR}/${RECO} -s "${OUTDIR}/${DET2}"
+lar -c ${WORKDIR}/${SRCS}/example/runPandoraNeutrinoMC.fcl -n ${NEVENTS} -o ${OUTDIR}/${RECO} -s "${OUTDIR}/${DET2}"

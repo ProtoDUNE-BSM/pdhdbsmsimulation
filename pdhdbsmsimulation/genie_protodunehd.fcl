@@ -5,15 +5,15 @@ BEGIN_PROLOG
 
 protodunehd_genie: @local::dunefd_genie
 protodunehd_genie.FluxType: "simple_flux"
-protodunehd_genie.FluxSearchPaths: "/exp/dune/data/users/chasnip/ProtoDUNESimulation/ProtoDUNEGSimpleNuFluxes"
+# protodunehd_genie.FluxSearchPaths: "/exp/dune/data/users/chasnip/ProtoDUNESimulation/ProtoDUNEGSimpleNuFluxes"
+protodunehd_genie.FluxSearchPaths: "/pnfs/dune/persistent/users/chasnip/ProtoDUNEBSM/NuFluxGSimpleFiles"
 protodunehd_genie.FluxFiles: [@local::wnp04.numu.decaymode[0]]
-#protodunehd_genie.FluxFiles: ["gsimple_*.root"]
-protodunehd_genie.FluxCopyMethod: "DIRECT"
+protodunehd_genie.FluxCopyMethod: "IFDH"
+# protodunehd_genie.FluxCopyMethod: "DIRECT"
 protodunehd_genie.TopVolume: "volCryostat"
 protodunehd_genie.FiducialCut: "mbox:-360.,0.,0.,360.,607.5,465."
 protodunehd_genie.EventsPerSpill: 1
-protodunehd_genie.POTPerSpill: 0 # 4.2e13 # assumed protons per spill at SPS
+protodunehd_genie.POTPerSpill: 0
 protodunehd_genie.GenFlavors: [@local::wnp04.numu.pdg] #pdg codes of flux generator neutrino flavors
-#protodunehd_genie.GenFlavors: [14, -14, 12, -12] #pdg codes of flux generator neutrino flavors
 
 END_PROLOG

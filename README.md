@@ -1,5 +1,5 @@
 # LArSoftSimulationTools
-LArSoft product to handle data processing of PD-HD data from hdf5 format to reconstructed art::ROOT files.
+LArSoft product for simulating events from generation through to reconstruction.
 
 ## Apptainer Container
 
@@ -39,7 +39,7 @@ source ${WORKDIR}/${DIRECTORY}/localProducts*/setup
 # Clone LArSoftDataTools from ProtoDUNE-BSM GitHub
 mrb g https://github.com/ProtoDUNE-BSM/pdhdbsmsimulation.git
 
-# You may want to also include the trigger emulation software
+# You will want to also include the trigger emulation software
 mrb g https://github.com/wesketchum/dunetrigger.git@develop
 
 cd ${MRB_BUILDDIR}
@@ -95,7 +95,7 @@ The custom detsim fcl file `standard_detsim_protodunehd_stage1_edit.fcl` is need
 
 The neutrino generator requires fluxes. These are provided in the form of GSimpleNtpFlux files. You can find some documentation [here](https://cdcvs.fnal.gov/redmine/projects/nutools/wiki/GENIEHelper_Flux). One issue with this flux file format is: "It is important that users not mix gsimple files that were created with different flux windows and/or different POTs/file; doing so may lead to incorrect overall POT accounting when generating GENIE events."
 
-Many of the gsimple files currently do have different POTs/file. Therefore, a separate gsimple exists for each wobbling configuration, neutrino flavour and hadron decay mode combination. A configuration file system has been set up that allows the user to choose the flux file they want. in `` you can find the parameters:
+Many of the gsimple files currently do have different POTs/file. Therefore, a separate gsimple exists for each wobbling configuration, neutrino flavour and hadron decay mode combination. A configuration file system has been set up that allows the user to choose the flux file they want. in `runPandoraNeutrinoMC.fcl` you can find the parameters:
 ```
 physics.producers.generator.FluxFiles: [@local::wnp04.nue.decaymode[4]]
 physics.producers.generator.GenFlavors: [@local::wnp04.nue.pdg]
@@ -103,3 +103,29 @@ physics.producers.generator.GenFlavors: [@local::wnp04.nue.pdg]
 So the user can change the wobbing configuration `wnp04, w133 or w000`, the neutrino flavour `numu, nue, numubar and nuebar` and decay mode `0, 1, 2, 3 or 4` (for numu/nue, 0-2 for numubar/nuebar). It is possible to load all the gsimple files at once, but the GENIE POT counting might be wrong.
 
 There are bash scripts included in the `test` directory that shows how a bash script could be used to run all the different flux configurations. The bash scripts use `sed` to edit the parameters `physics.producers.generator.FluxFiles` and `physics.producers.generator.GenFlavors`. The script `OnlineGenJob.sh` should loop though the different flux configurations and generate MC samples for each.
+
+# Running the Simulation on FermiGrid
+
+To generate large samples of neutrinos the grid is needed. So far, scripts have been written to run neutrino production jobs from generation through to reconstruction on FermiGrid. For further details on running jobs on FermiGrid please consult this [tutorial](https://dune.github.io/computing-basics/07-grid-job-submission/index.html). First, login to your favourite gpvm node and make sure you have your grid certificate and proxy.
+```
+kinit -f <USER>
+kx509
+voms-proxy-init --noregen -rfc -voms dune:/dune/Role=Analysis
+```
+To run on the grid you will need to tar up your local environment and send it to the grid node along with the execution script. One trick is that the local products setup script needs to be altered to effectively setup the work envirnment on the grid node. Run `cp localProducts_*/setup localProducts_*/setup_grid` - this gives you a new setup script that will be called by the job script. Chane the following environment variables in `localProducts_*/setup_grid` so they look like this:
+```
+setenv MRB_PROJECT "larsoft"
+setenv MRB_PROJECT_VERSION "v10_01_03"
+setenv MRB_QUALS "e26:prof"
+setenv MRB_TOP "${INPUT_TAR_DIR_LOCAL}/protodunedm_mc_simulation"
+setenv MRB_TOP_BUILD "${INPUT_TAR_DIR_LOCAL}/protodunedm_mc_simulation"
+setenv MRB_SOURCE "${INPUT_TAR_DIR_LOCAL}/protodunedm_mc_simulation/srcs"
+setenv MRB_INSTALL "${INPUT_TAR_DIR_LOCAL}/protodunedm_mc_simulation/localProducts_larsoft_v10_01_03_e26_prof"
+setenv PRODUCTS "${MRB_INSTALL}:${PRODUCTS}"
+setenv CETPKG_INSTALL "${INPUT_TAR_DIR_LOCAL}/protodunedm_mc_simulation/localProducts_larsoft_v10_01_03_e26_prof"
+```
+Once this is edited you can run the script `tarball_protodunedm.sh` located in the `test` directory. This gives you a tarball of your work environment that is passed to the grid job. Note that if you change your code you will need to re-create this tarball before giving it the grid job.
+
+Next you can simply run `jobsub_nucosradsim.sh` as a bash executable. In order to alter the type and number of jobs being submitted you first need to edit this script. There are some comments in the script that hopefully explain what needs to change. In the future these parameter changes might be done via command line arguments. It is recommended that the number of events per job is kept to 1 for now in order to stop the RAM usage blowing up. Simulating neutrinos along with the cosmic overlay is quite resource-intensive.
+
+The job submission script `jobsub_nucosradsim.sh` submits the script `run_fermigridprod_neutrino_cosoverlay_reco.sh` with our corresponding tarball to the grid. Open `run_fermigridprod_neutrino_cosoverlay_reco.sh` to see what is being run. You should be able to see each step of the sim/reco of neutrinos being executed. 

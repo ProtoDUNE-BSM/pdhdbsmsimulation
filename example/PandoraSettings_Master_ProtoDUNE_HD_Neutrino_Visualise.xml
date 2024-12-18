@@ -48,9 +48,9 @@
         <RecreatedVertexListName>RecreatedVertices</RecreatedVertexListName>
         <VisualizeOverallRecoStatus>false</VisualizeOverallRecoStatus>
     </algorithm>
-<!--    <algorithm type = "LArVisualMonitoring">
+      <algorithm type = "LArVisualMonitoring">
         <ShowCurrentPfos>true</ShowCurrentPfos>
         <ShowDetector>true</ShowDetector>
       </algorithm>
--->
+
 </pandora>

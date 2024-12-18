@@ -4,10 +4,6 @@ standard_hepmcfilegen:
 {
   module_type:   "HepMCFileGen"
   filename: "/exp/dune/app/users/chasnip/CERN_Fellowship/ProtoDUNE_DM/textfile_data/NP04_601MeV_detector_pimu_LarSoft.txt"
-  #filename: "/exp/dune/app/users/chasnip/CERN_Fellowship/ProtoDUNE_DM/textfile_data/NP04_1003MeV_detector_pimu_LarSoft.txt"
-  #filename: "/exp/dune/app/users/chasnip/CERN_Fellowship/ProtoDUNE_DM/textfile_data/NP04_1003MeV_detector_pie_LarSoft.txt"
-  #filename: "/exp/dune/app/users/chasnip/CERN_Fellowship/ProtoDUNE_DM/1003MeV_detector_pimu_LarSoft.txt"
-  #filename: "/exp/dune/app/users/chasnip/CERN_Fellowship/ProtoDUNE_DM/1003MeV_detector_pie_LarSoft.txt"
   EventsPerPOT: 10
 }
 
