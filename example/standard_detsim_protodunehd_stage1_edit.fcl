@@ -8,8 +8,7 @@ services:
   MemoryTracker:     @local::dune_memory_tracker
   RandomNumberGenerator: {} #ART native random number generator
   FileCatalogMetadata:  @local::art_file_catalog_mc
-  #ExptGeoHelperInterface:       @local::dune_geometry_helper
-  #WireReadout:          @local::dune_wire_readout
+  #WireReadout:          @local::dune_wire_readout # probably not necessary
 }
 
 physics.simulate: [tpcrawdecoder]

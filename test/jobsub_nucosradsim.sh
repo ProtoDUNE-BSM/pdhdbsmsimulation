@@ -3,7 +3,9 @@
 # Default production strategy is to generate 1 neutrino event per job for a specific wobbling
 # configuration, neutrino flavour and hadron decay production mode
 
-DMWORKDIR=/exp/dune/app/users/chasnip/CERN_Fellowship/protodunedm_mc_simulation
+#DMWORKDIR=/exp/dune/app/users/chasnip/CERN_Fellowship/protodunedm_mc_simulation
+# Hopefully you are in the work dir!
+DMWORKDIR=${PWD}
 TOTALEVENTS=100 # total events to generate per wob/flav/decay
 NEVENTS=1 # number of events per job - probably want to keep this to 1
 
@@ -30,7 +32,7 @@ do
           -e GFAL_PLUGIN_DIR=/usr/lib64/gfal2-plugins -e GFAL_CONFIG_DIR=/etc/gfal2.d \
           --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC --expected-lifetime=48h --disk=10GB --memory=12GB --cpu=1 -N 1 \
           --tar_file_name=dropbox://${DMWORKDIR}/LocalProdNumu.Blob.tar.gz \
-          file://${DMWORKDIR}/scripts/run_fermigridprod_neutrino_cosoverlay_reco.sh ${FCL} $wob $flav $decay ${NEVENTS} ${NSKIP}
+          file://${DMWORKDIR}/srcs/pdhdbsmsimulation/test/run_fermigridprod_neutrino_cosoverlay_reco.sh ${FCL} $wob $flav $decay ${NEVENTS} ${NSKIP}
       done
     done
   done

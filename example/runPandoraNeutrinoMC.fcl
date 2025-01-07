@@ -92,7 +92,7 @@ physics: {
     # event feature labeling
     emtrkmichelid:      @local::pdhd_mc_emtrkmichelid
     # reconstruction using disambiguated hits
-    pandora:            @local::protodunehd_pandora
+    pandora:            @local::protodunehd_neutrino_pandora
     pandoraWriter:      @local::dune_pandorawriter
     pandoraTrack:       @local::dune_pandoraTrackCreation
     pandoraShower:      @local::dune_pandoraShowerCreation
@@ -213,5 +213,5 @@ physics.producers.pandora2Track.UseAllParticles:             true
 physics.producers.pandora2Shower.PFParticleLabel:            "pandora"
 physics.producers.pandora2Shower.UseAllParticles:            true
 
-physics.producers.pandora.ConfigFile: "PandoraSettings_Master_ProtoDUNE_HD_Neutrino.xml"
+#physics.producers.pandora.ConfigFile: "PandoraSettings_Master_ProtoDUNE_HD_Neutrino.xml"
 #physics.producers.pandora.ConfigFile: "./srcs/pdhdbsmsimulation/example/PandoraSettings_Master_ProtoDUNE_HD_Neutrino.xml"

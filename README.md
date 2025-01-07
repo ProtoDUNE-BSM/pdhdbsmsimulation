@@ -53,7 +53,7 @@ mrbslp
 Once the development area has been created you can set up the environment withe following script:
 
 ```
-VERSION=v10_01_03d00
+VERSION=v10_01_04d00
 QUALS=e26:prof
 
 source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
@@ -115,14 +115,14 @@ voms-proxy-init --noregen -rfc -voms dune:/dune/Role=Analysis
 To run on the grid you will need to tar up your local environment and send it to the grid node along with the execution script. One trick is that the local products setup script needs to be altered to effectively setup the work envirnment on the grid node. Run `cp localProducts_*/setup localProducts_*/setup_grid` - this gives you a new setup script that will be called by the job script. Chane the following environment variables in `localProducts_*/setup_grid` so they look like this:
 ```
 setenv MRB_PROJECT "larsoft"
-setenv MRB_PROJECT_VERSION "v10_01_03"
+setenv MRB_PROJECT_VERSION "v10_01_04"
 setenv MRB_QUALS "e26:prof"
-setenv MRB_TOP "${INPUT_TAR_DIR_LOCAL}/protodunedm_mc_simulation"
-setenv MRB_TOP_BUILD "${INPUT_TAR_DIR_LOCAL}/protodunedm_mc_simulation"
-setenv MRB_SOURCE "${INPUT_TAR_DIR_LOCAL}/protodunedm_mc_simulation/srcs"
-setenv MRB_INSTALL "${INPUT_TAR_DIR_LOCAL}/protodunedm_mc_simulation/localProducts_larsoft_v10_01_03_e26_prof"
+setenv MRB_TOP "${INPUT_TAR_DIR_LOCAL}/protodunedm"
+setenv MRB_TOP_BUILD "${INPUT_TAR_DIR_LOCAL}/protodunedm"
+setenv MRB_SOURCE "${INPUT_TAR_DIR_LOCAL}/protodunedm/srcs"
+setenv MRB_INSTALL "${INPUT_TAR_DIR_LOCAL}/protodunedm/localProducts_larsoft_v10_01_04d00_e26_prof"
 setenv PRODUCTS "${MRB_INSTALL}:${PRODUCTS}"
-setenv CETPKG_INSTALL "${INPUT_TAR_DIR_LOCAL}/protodunedm_mc_simulation/localProducts_larsoft_v10_01_03_e26_prof"
+setenv CETPKG_INSTALL "${INPUT_TAR_DIR_LOCAL}/protodunedm_mc_simulation/localProducts_larsoft_v10_01_04d00_e26_prof"
 ```
 Once this is edited you can run the script `tarball_protodunedm.sh` located in the `test` directory. This gives you a tarball of your work environment that is passed to the grid job. Note that if you change your code you will need to re-create this tarball before giving it the grid job.
 
