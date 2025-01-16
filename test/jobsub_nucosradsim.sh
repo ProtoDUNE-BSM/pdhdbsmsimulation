@@ -23,7 +23,7 @@ for (( NSKIP=0; NSKIP<=${TOTALEVENTS}; NSKIP+=${NEVENTS} ))
 do
   for wob in "wnp04"
   do
-    for flav in "numu"
+    for flav in "nue" 
     do
       for decay in 0 1 2 3 4
       do

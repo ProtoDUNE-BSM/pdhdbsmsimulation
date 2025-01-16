@@ -65,4 +65,4 @@ source:
 }
 
 physics.producers.pandoraDisplay.HitFinderModuleLabel:             "hitpdune"
-physics.producers.pandoraDisplay.ConfigFile:            "./srcs/pdhdbsmsimulation/example/PandoraSettings_Master_ProtoDUNE_HD_Neutrino.xml"
+physics.producers.pandoraDisplay.ConfigFile:            "./srcs/pdhdbsmsimulation/example/PandoraSettings_Master_ProtoDUNE_HD_Neutrino_Visualise.xml"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-WORKDIR="/exp/dune/app/users/chasnip/CERN_Fellowship/protodunedm_mc_simulation"
+WORKDIR="/exp/dune/app/users/chasnip/CERN_Fellowship/protodunedm_mc_simulation_v10_01_04"
 SRCS="srcs/pdhdbsmsimulation/example"
 
 PARAMETER="FluxFiles" # edit to get correct flux file
@@ -19,6 +19,7 @@ G41="pdhd_g41gen_nu_cosmic_rad_${WOBCONF}_${FLAV}_decaymode${DECAY}_${NEVENTS}_$
 G42="pdhd_g42gen_nu_cosmic_rad_${WOBCONF}_${FLAV}_decaymode${DECAY}_${NEVENTS}_${NSKIP}.root"
 DET1="pdhd_detsim1g4gen_nu_cosmic_rad_${WOBCONF}_${FLAV}_decaymode${DECAY}_${NEVENTS}_${NSKIP}.root"
 DET2="pdhd_detsim2g4gen_nu_cosmic_rad_${WOBCONF}_${FLAV}_decaymode${DECAY}_${NEVENTS}_${NSKIP}.root"
+TRIG="pdhd_trigdetsim2g4gen_nu_cosmic_rad_${WOBCONF}_${FLAV}_decaymode${DECAY}_${NEVENTS}_${NSKIP}.root"
 RECO="pdhd_recodetsimg4gen_nu_cosmic_rad_${WOBCONF}_${FLAV}_decaymode${DECAY}_${NEVENTS}_${NSKIP}.root"
 
 if [[ ! -f "${WORKDIR}/${SRCS}/$FCL_FILE" ]]; then
@@ -46,12 +47,15 @@ echo "Updated $PDGPARAM in $FCL_FILE to [@local::${WOBCONF}.${FLAV}.pdg]"
 
 lar -c ${WORKDIR}/${SRCS}/${FCL_FILE} -n ${NEVENTS} -o "${OUTDIR}/${GEN}"
 wait
-lar -c standard_g4_protodunehd_stage1.fcl -n ${NEVENTS} -o ${OUTDIR}/${G41} -s "${OUTDIR}/${GEN}"
+#lar -c standard_g4_protodunehd_stage1.fcl -n ${NEVENTS} -o ${OUTDIR}/${G41} -s "${OUTDIR}/${GEN}"
+lar -c ${WORKDIR}/${SRCS}/standard_g4_protodunehd_edit.fcl -n ${NEVENTS} -o ${OUTDIR}/${G41} -s "${OUTDIR}/${GEN}"
 wait
-lar -c standard_g4_protodunehd_stage2.fcl -n ${NEVENTS} -o ${OUTDIR}/${G42} -s "${OUTDIR}/${G41}"
+#lar -c standard_g4_protodunehd_stage2.fcl -n ${NEVENTS} -o ${OUTDIR}/${G42} -s "${OUTDIR}/${G41}"
+#wait
+lar -c ${WORKDIR}/${SRCS}/standard_detsim_protodunehd_stage1_edit.fcl -n ${NEVENTS} -o ${OUTDIR}/${DET1} -s "${OUTDIR}/${G41}"
 wait
-lar -c ${WORKDIR}/${SRCS}/standard_detsim_protodunehd_stage1_edit.fcl -n ${NEVENTS} -o ${OUTDIR}/${DET1} -s "${OUTDIR}/${G42}"
+#lar -c standard_detsim_protodunehd_stage2.fcl -n ${NEVENTS} -o ${OUTDIR}/${DET2} -s "${OUTDIR}/${DET1}"
+#wait
+lar -c ${WORKDIR}/${SRCS}/run_tpalg_taalg_tcalg.fcl  -n ${NEVENTS} -o ${OUTDIR}/${TRIG} -s "${OUTDIR}/${DET1}" > trigger_output.txt
 wait
-lar -c standard_detsim_protodunehd_stage2.fcl -n ${NEVENTS} -o ${OUTDIR}/${DET2} -s "${OUTDIR}/${DET1}"
-wait
-lar -c ${WORKDIR}/${SRCS}/example/runPandoraNeutrinoMC.fcl -n ${NEVENTS} -o ${OUTDIR}/${RECO} -s "${OUTDIR}/${DET2}"
+lar -c ${WORKDIR}/${SRCS}/runPandoraNeutrinoMC.fcl -n ${NEVENTS} -o ${OUTDIR}/${RECO} -s "${OUTDIR}/${TRIG}"

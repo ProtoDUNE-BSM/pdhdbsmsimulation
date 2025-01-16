@@ -75,5 +75,5 @@ outputs:
 }
 
 # Set neutrino GENIE generator parameters
-physics.producers.generator.FluxFiles: [@local::wnp04.numu.decaymode[0]]
+physics.producers.generator.FluxFiles: [@local::wnp04.numu.decaymode[1]]
 physics.producers.generator.GenFlavors: [@local::wnp04.numu.pdg]

@@ -19,8 +19,10 @@ echo "$FCL_FILE, $WOBCONF, $FLAV, $DECAY, $NEVENTS and $NSKIP"
 WOBDIR=${WOBCONF}
 
 # dCache directories for input/ouput
-SCRATCHDIR=/pnfs/dune/scratch/users/chasnip/ProtoDUNEBSM/NeutrinoSim
-XROOTDSCRATCHDIR=root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/scratch/users/chasnip/ProtoDUNEBSM/NeutrinoSim
+#SCRATCHDIR=/pnfs/dune/scratch/users/chasnip/ProtoDUNEBSM/NeutrinoSim
+#XROOTDSCRATCHDIR=root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/scratch/users/chasnip/ProtoDUNEBSM/NeutrinoSim
+SCRATCHDIR=/pnfs/dune/scratch/users/chasnip/ProtoDUNEBSM/NeutrinoSim_v2
+XROOTDSCRATCHDIR=root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/scratch/users/chasnip/ProtoDUNEBSM/NeutrinoSim_v2
 
 # Names of ouput files for different stages
 
@@ -82,6 +84,11 @@ ls $CETPKG_INSTALL
 LOGYLOG ">>> echo CET_PLUGIN_PATH"
 echo $CET_PLUGIN_PATH
 
+# Needed to edit electronics gain to be 7.8 instead of 14 mV/fC
+LOGYLOG "Update WIRECELL_PATH to include local configs"
+export WIRECELL_PATH=$MRB_SOURCE/pdhdbsmsimulation/wire-cell-cfg:$WIRECELL_PATH
+echo ${WIRECELL_PATH}
+
 # Files in INPUT_TAR_DIR_LOCAL are read-only - copy to condor job directory for editing
 cp ${INPUT_TAR_DIR_LOCAL}/protodunedm/srcs/pdhdbsmsimulation/example/$FCL_FILE mytmpfcl  # do a cp, not mv
 rm ${INPUT_TAR_DIR_LOCAL}/protodunedm/srcs/pdhdbsmsimulation/example/$FCL_FILE # This really just removes the link
@@ -115,24 +122,27 @@ ifdh cp -D ${GENOUTFILENAME} ${SCRATCHDIR}/${GENPATH}
 rm ${GENOUTFILENAME}
 
 # Do G4 simulation
-lar -c standard_g4_protodunehd_stage1.fcl -n ${NEvents} -o ${G41OUTFILENAME} -s ${XROOTDSCRATCHDIR}/${GENPATH}/${GENOUTFILENAME}
+#lar -c standard_g4_protodunehd_stage1.fcl -n ${NEvents} -o ${G41OUTFILENAME} -s ${XROOTDSCRATCHDIR}/${GENPATH}/${GENOUTFILENAME}
+lar -c ${INPUT_TAR_DIR_LOCAL}/protodunedm/srcs/pdhdbsmsimulation/example/standard_g4_protodunehd_edit.fcl -n ${NEvents} -o ${G41OUTFILENAME} -s ${XROOTDSCRATCHDIR}/${GENPATH}/${GENOUTFILENAME}
 # Check output was successfully produced
 if [ ! -e ${G41OUTFILENAME} ]; then
   LOGYLOG "[ERROR]: Failed to produce expected g4 file."
   exit 1
 fi
 
-lar -c standard_g4_protodunehd_stage2.fcl -n ${NEvents} -o ${G42OUTFILENAME} -s ${G41OUTFILENAME}
-rm ${G41OUTFILENAME}
+#lar -c standard_g4_protodunehd_stage2.fcl -n ${NEvents} -o ${G42OUTFILENAME} -s ${G41OUTFILENAME}
+#rm ${G41OUTFILENAME}
 # Check output was successfully produced
-if [ ! -e ${G42OUTFILENAME} ]; then
-  LOGYLOG "[ERROR]: Failed to produce expected g4 file."
-  exit 1
-fi
+#if [ ! -e ${G42OUTFILENAME} ]; then
+#  LOGYLOG "[ERROR]: Failed to produce expected g4 file."
+#  exit 1
+#fi
 
 # Do detsim stage 1 simulation
-lar -c ${INPUT_TAR_DIR_LOCAL}/protodunedm/srcs/pdhdbsmsimulation/example/standard_detsim_protodunehd_stage1_edit.fcl -n ${NEvents} -o ${DETSIM1OUTFILENAME} -s ${G42OUTFILENAME}
-rm ${G42OUTFILENAME}
+#lar -c ${INPUT_TAR_DIR_LOCAL}/protodunedm/srcs/pdhdbsmsimulation/example/standard_detsim_protodunehd_stage1_edit.fcl -n ${NEvents} -o ${DETSIM1OUTFILENAME} -s ${G42OUTFILENAME}
+lar -c ${INPUT_TAR_DIR_LOCAL}/protodunedm/srcs/pdhdbsmsimulation/example/standard_detsim_protodunehd_stage1_edit.fcl -n ${NEvents} -o ${DETSIM1OUTFILENAME} -s ${G41OUTFILENAME}
+#rm ${G42OUTFILENAME}
+rm ${G41OUTFILENAME}
 # Check output was successfully produced
 if [ ! -e ${DETSIM1OUTFILENAME} ]; then
   LOGYLOG "[ERROR]: Failed to produce expected detsim file."
@@ -140,17 +150,19 @@ if [ ! -e ${DETSIM1OUTFILENAME} ]; then
 fi
 
 # Do detsim stage 2 simulation
-lar -c standard_detsim_protodunehd_stage2.fcl -n ${NEvents} -o ${DETSIM2OUTFILENAME} -s ${DETSIM1OUTFILENAME}
-rm ${DETSIM1OUTFILENAME}
+#lar -c standard_detsim_protodunehd_stage2.fcl -n ${NEvents} -o ${DETSIM2OUTFILENAME} -s ${DETSIM1OUTFILENAME}
+#rm ${DETSIM1OUTFILENAME}
 # Check output was successfully produced
-if [ ! -e ${DETSIM2OUTFILENAME} ]; then
-  LOGYLOG "[ERROR]: Failed to produce expected detsim file."
-  exit 1
-fi
+#if [ ! -e ${DETSIM2OUTFILENAME} ]; then
+#  LOGYLOG "[ERROR]: Failed to produce expected detsim file."
+#  exit 1
+#fi
 
 # Do trigger simulation
-lar -c ${INPUT_TAR_DIR_LOCAL}/protodunedm/srcs/pdhdbsmsimulation/example/run_tpalg_taalg_tcalg.fcl -n ${NEvents} -o ${TRIGOUTFILENAME} -s ${DETSIM2OUTFILENAME}
-rm ${DETSIM2OUTFILENAME}
+#lar -c ${INPUT_TAR_DIR_LOCAL}/protodunedm/srcs/pdhdbsmsimulation/example/run_tpalg_taalg_tcalg.fcl -n ${NEvents} -o ${TRIGOUTFILENAME} -s ${DETSIM2OUTFILENAME}
+lar -c ${INPUT_TAR_DIR_LOCAL}/protodunedm/srcs/pdhdbsmsimulation/example/run_tpalg_taalg_tcalg.fcl -n ${NEvents} -o ${TRIGOUTFILENAME} -s ${DETSIM1OUTFILENAME}
+#rm ${DETSIM2OUTFILENAME}
+rm ${DETSIM1OUTFILENAME}
 # Check output was successfully produced
 if [ ! -e ${TRIGOUTFILENAME} ]; then
   LOGYLOG "[ERROR]: Failed to produce expected triggered file."

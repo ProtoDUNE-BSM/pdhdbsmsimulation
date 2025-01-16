@@ -1,0 +1,7 @@
+#include "standard_g4_protodunehd.fcl"
+
+process_name: G4Stage
+
+physics.producers.PDFastSim: @local::protodune_pdfastsim_pvs
+
+physics.simulate:      [  rns, largeant, IonAndScint, IonAndScintExternal, PDFastSim ]
