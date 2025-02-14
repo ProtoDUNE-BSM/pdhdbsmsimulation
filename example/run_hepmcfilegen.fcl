@@ -1,4 +1,4 @@
-#include "hepmcfilegen.fcl"
+#include "HepMCFileGen.fcl"
 #include "largeantmodules.fcl"
 #include "detsimmodules.fcl"
 #include "services_refactored_pdune.fcl"
