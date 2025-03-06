@@ -179,6 +179,25 @@ private:
   TH1D* fEnergyTot;
   TH1D* fEnergyLep;
   TH1D* fEnergyPi;
+
+  TH1D* fPw;
+  TH1D* fNw;
+  TH1D* fM4;
+  TH1D* fUa4;
+  TH1D* fLn;
+  TH1D* fthetaN;
+  TH1D* fphiN;
+  TH1D* fxf;
+  TH1D* fyf;
+  TH1D* fzf;
+  TH1D* fGamma_PtoN;
+  TH1D* fB_P;
+  TH1D* fGamma_N;
+  TH1D* fB_N;
+  TH1D* ft_N;
+  TH1D* ft_nu;
+  TH1D* fPoT_f;
+
 };
 //------------------------------------------------------------------------------
 evgen::HepMCFileGen::HepMCFileGen(fhicl::ParameterSet const & p)
@@ -196,8 +215,8 @@ evgen::HepMCFileGen::HepMCFileGen(fhicl::ParameterSet const & p)
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-void evgen::HepMCFileGen::beginJob()
-{
+void evgen::HepMCFileGen::beginJob(){
+
   std::cout << "Filename : " << fFilename << std::endl;
   fInputFile = new std::ifstream(fFilename.c_str(), std::ifstream::in);
 
@@ -216,167 +235,259 @@ void evgen::HepMCFileGen::beginJob()
   fPx = tfs->make<TH1D>("hPx",";x-Momentum (GeV/c)",20,0,2);
   fPy = tfs->make<TH1D>("hPy",";y-Momentum (GeV/c)",20,0,2);
   fPz = tfs->make<TH1D>("hPz",";z-Momentum (GeV/c)",50,0,200);
+
   fPxLep = tfs->make<TH1D>("hPxLep",";x-Momentum Lep. (GeV/c)",20,0,2);
   fPyLep = tfs->make<TH1D>("hPyLep",";y-Momentum Lep. (GeV/c)",20,0,2);
   fPzLep = tfs->make<TH1D>("hPzLep",";z-Momentum Lep. GeV/c)",50,0,200);
+
   fPxPi = tfs->make<TH1D>("hPxPi",";x-Momentum #pi (GeV/c)",20,0,2);
   fPyPi = tfs->make<TH1D>("hPyPi",";y-Momentum #pi (GeV/c)",20,0,2);
+
   fPzPi = tfs->make<TH1D>("hPzPi",";z-Momentum #pi (GeV/c)",50,0,200);
+
   fPxyLep = tfs->make<TH2D>("hPxyLep",";x-Momentum Lep. (GeV/c);y-Momentum Lep. (GeV/c)",20,0, 2, 20, 0, 2);  
   fPxyPi = tfs->make<TH2D>("hPxyPi",";x-Momentum #pi (GeV/c);y-Momentum #pi (GeV/c)",20,0, 2, 20, 0, 2);  
+
   fbx = tfs->make<TH1D>("hbx",";x-Position (cm)",40,-400,400);
   fby = tfs->make<TH1D>("hby",";y-Position (cm)",40,-400,400);
   fbz = tfs->make<TH1D>("hbz",";z-Position (cm)",40,-400,400);
+
   fx = tfs->make<TH1D>("hx",";x-Position (cm)",40,-400,400);
   fy = tfs->make<TH1D>("hy",";y-Position (cm)",50,-100,900);
   fz = tfs->make<TH1D>("hz",";z-Position (cm)",50,-100,900);
+
   fTPCx = tfs->make<TH1D>("hTPCx",";x-Position in TPC (cm)",40,-400,400);
   fTPCy = tfs->make<TH1D>("hTPCy",";y-Position in TPC (cm)",50,-100,900);
   fTPCz = tfs->make<TH1D>("hTPCz",";z-Position in TPC (cm)",50,-100,900);
+
   fxy = tfs->make<TH2D>("hxy",";x-Position (cm);y-Position (cm)",40,-400,400,50,-100,900);
   fzy = tfs->make<TH2D>("hzy",";z-Position (cm);y-Position (cm)",50,-100,900,50,-100,900);
   fxz = tfs->make<TH2D>("hxz",";x-Position (cm);z-Position (cm)",40,-400,400,50,-100,900);
+
   fEnergyTot = tfs->make<TH1D>("hEnergyTot",";Total Energy (GeV)",50,0,200);
   fEnergyLep = tfs->make<TH1D>("hEnergyLep",";Total Energy Lep. (GeV)",50,0,200);
   fEnergyPi = tfs->make<TH1D>("hEnergyPi",";Total Energy #pi (GeV)",50,0,200);
 
+  fPw = tfs->make<TH1D>("hPw",";Pw",50,0,200);
+  fNw = tfs->make<TH1D>("hNw",";Nw",50,0,200);
+  fM4 = tfs->make<TH1D>("hM4",";M4",50,0,200);
+  fUa4 = tfs->make<TH1D>("hUa4",";Ua4",50,0,200);
+  fLn = tfs->make<TH1D>("hLn",";Ln",50,0,200);
+  fthetaN = tfs->make<TH1D>("hthetaN",";thetaN",50,0,200);
+  fphiN = tfs->make<TH1D>("hphiN",";phiN",50,0,200);
+  fxf = tfs->make<TH1D>("hxf",";xf",50,0,200);
+  fyf = tfs->make<TH1D>("hyf",";yf",50,0,200);
+  fzf = tfs->make<TH1D>("hzf",";zf",50,0,200);
+  fGamma_PtoN = tfs->make<TH1D>("hGamma_PtoN",";Gamma_PtoN",50,0,200);
+  fB_P = tfs->make<TH1D>("hB_P",";B_P",50,0,200);
+  fGamma_N = tfs->make<TH1D>("hGamma_N",";Gamma_N",50,0,200);
+  fB_N = tfs->make<TH1D>("hB_N",";B_N",50,0,200);
+  ft_N = tfs->make<TH1D>("ht_N",";t_N",50,0,200);
+  ft_nu = tfs->make<TH1D>("ht_nu",";t_nu",50,0,200);
+  fPoT_f = tfs->make<TH1D>("hPoT_f",";PoT_f",50,0,200);
+
+
   return;
-  
 }
 //------------------------------------------------------------------------------
-void evgen::HepMCFileGen::beginRun(art::Run& run)
-{
-    fEventsPerSubRun = 0;
-    art::ServiceHandle<geo::Geometry const> geo;
-    run.put(std::make_unique<sumdata::RunData>(geo->DetectorName()), art::fullRun());
-  }
+void evgen::HepMCFileGen::beginRun(art::Run& run){
+  fEventsPerSubRun = 0;
+  art::ServiceHandle<geo::Geometry const> geo;
+  run.put(std::make_unique<sumdata::RunData>(geo->DetectorName()), art::fullRun());
+}
 //------------------------------------------------------------------------------
-void evgen::HepMCFileGen::endSubRun(art::SubRun& sr)
-  {
-    auto p = std::make_unique<sumdata::POTSummary>();
-    p->totpot     = fEventsPerSubRun * fEventsPerPOT;
-    p->totgoodpot = fEventsPerSubRun * fEventsPerPOT;
-    sr.put(std::move(p), art::subRunFragment());
-    return;
-  }
+void evgen::HepMCFileGen::endSubRun(art::SubRun& sr){
+  auto p = std::make_unique<sumdata::POTSummary>();
+  p->totpot     = fEventsPerSubRun * fEventsPerPOT;
+  p->totgoodpot = fEventsPerSubRun * fEventsPerPOT;
+  sr.put(std::move(p), art::subRunFragment());
+  return;
+}
 //------------------------------------------------------------------------------
-void evgen::HepMCFileGen::produce(art::Event & e)
-{
+void evgen::HepMCFileGen::produce(art::Event & e){
+
   if( !fInputFile->good() || fInputFile->peek() == EOF) {
-    throw cet::exception("HepMCFileGen") << "input text file "
-                                        << " cannot be read in produce().\n";
+    throw cet::exception("HepMCFileGen") << "input text file " << " cannot be read in produce().\n";
   }
+
   std::unique_ptr< std::vector<simb::MCTruth> > truthcol(new std::vector<simb::MCTruth>);
   simb::MCTruth truth;
-  // declare the variables for reading in the event record
-  int            event               = 0;
-  unsigned short nParticles          = 0;
-  int            status              = 0;
-  int            pdg                 = 0;
-  int            firstMother         = 0;
-  int            secondMother        = 0;
-  int            firstDaughter       = 0;
-  int            secondDaughter      = 0;
-  double         xMomentum           = 0.;
-  double         yMomentum           = 0.;
-  double         zMomentum           = 0.;
-  double         energy              = 0.;
-  double         mass                = 0.;
-  double         xPosition           = 0.;
-  double         yPosition           = 0.;
-  double         zPosition           = 0.;
-  double         time                = 0.;
+
+
+
+  std::string hashString = "XXXX";
+  int  eventNo    = 0;
+  unsigned short nParticles          = 2;
+
+
+  int    Pw = 0;
+  double Nw = 0;
+  double M4 = 0;
+  double Ua4= 0;
+  double Ln = 0;
+  double x0 = 0;
+  double y0 = 0;
+  double z0 = 0;
+  double thetaN = 0;
+  double phiN  = 0;
+  double xf = 0;
+  double yf = 0;
+  double zf = 0;
+  double Gamma_PtoN = 0;
+  double B_P = 0;
+  double Gamma_N = 0;
+  double B_N = 0;
+  double t_N = 0;
+  double t_nu = 0;
+  double PoT_f = 0;
+
+
+
+  int PartID = 0;
+  double E_lab = 0;
+  double px_lab = 0;
+  double py_lab = 0;
+  double pz_lab = 0;
+
+
+
+  // int            status              = 0;
+  // int            pdg                 = 0;
+  // int            firstMother         = 0;
+  // int            secondMother        = 0;
+  // int            firstDaughter       = 0;
+  // int            secondDaughter      = 0;
+  // double         xMomentum           = 0.;
+  // double         yMomentum           = 0.;
+  // double         zMomentum           = 0.;
+  // double         energy              = 0.;
+  // double         mass                = 0.;
+  // double         xPosition           = 0.;
+  // double         yPosition           = 0.;
+  // double         zPosition           = 0.;
+  // double         time                = 0.;
+
   // read in line to get event number and number of particles
+  
+    
   std::string oneLine;
   std::getline(*fInputFile, oneLine);
   std::istringstream inputLine;
   inputLine.str(oneLine);
-  inputLine >> event >> nParticles;
+  inputLine >> hashString >> eventNo;
 
-  //bool lowPiE(false);
+  std::cout << "Event number: " << eventNo << std::endl;
+
+  std::getline(*fInputFile, oneLine);
+  inputLine.clear();
+  inputLine.str(oneLine);
+  inputLine >> Pw >> Nw >>M4 >> Ua4 >> Ln >>x0>>y0>>z0>>thetaN>>phiN>>xf>>yf>>zf>>Gamma_PtoN>>B_P>>Gamma_N>>B_N>>t_N>>t_nu>>PoT_f;
+
+
   double total_energy(0);
-  // now read in all the lines for the particles
-  // in this interaction. only particles with
-  // status = 1 get tracked in Geant4. see GENIE GHepStatus
+
+
+
   for(unsigned short i = 0; i < nParticles; ++i){
+
     std::getline(*fInputFile, oneLine);
     inputLine.clear();
     inputLine.str(oneLine);
-    inputLine >> status >> pdg
-              >> firstMother >> secondMother >> firstDaughter >> secondDaughter
-              >> xMomentum   >> yMomentum    >> zMomentum     >> energy >> mass
-              >> xPosition   >> yPosition    >> zPosition     >> time;
-    //std::cout<< "pdg_all" << pdg << "xmomentum_all" << xMomentum << "ymomentum_all" << 
-	//	yMomentum << "zposition_all" << zPosition << std::endl;
+    inputLine >> PartID >> E_lab >> px_lab >> py_lab >> pz_lab;
 
-    std::string vol_before = fTotalGeom->VolumeName({xPosition*0.1, 
-			                                 yPosition*0.1, 
-											 zPosition*0.1});
 
-	std::string vol_sub_before =  vol_before.substr(0, vol_before.find("_"));
+
+    // std::cout << "Particle ID: " << PartID << std::endl;
+
+
+
+
+    std::string vol_before = fTotalGeom->VolumeName({x0*0.1, y0*0.1, z0*0.1});
+
+    std::string vol_sub_before =  vol_before.substr(0, vol_before.find("_"));
     if (vol_sub_before == "volCryostat" || vol_sub_before == "volTPCActiveInner") inLArBefore++;
-	else outLArBefore++;
+    else outLArBefore++;
+      
+    fbx->Fill(x0*0.1);
+    fby->Fill(y0*0.1);
+    fbz->Fill(z0*0.1);
+
+    x0 = x0 * 0.1 + fOriginTranslate.at(0);
+    y0 = y0 * 0.1 + fOriginTranslate.at(1);
+    z0 = z0 * 0.1 + fOriginTranslate.at(2);
+    std::string vol_after = fTotalGeom->VolumeName({x0, y0, z0});
     
-	fbx->Fill(xPosition*0.1);
-    fby->Fill(yPosition*0.1);
-    fbz->Fill(zPosition*0.1);
-
-	xPosition = xPosition * 0.1 + fOriginTranslate.at(0);
-	yPosition = yPosition * 0.1 + fOriginTranslate.at(1);
-    zPosition = zPosition * 0.1 + fOriginTranslate.at(2);
-    std::string vol_after = fTotalGeom->VolumeName({xPosition, yPosition, zPosition});
-	
-	std::string vol_sub_after =  vol_after.substr(0, vol_after.find("_"));
+    std::string vol_sub_after =  vol_after.substr(0, vol_after.find("_"));
     if (vol_sub_after == "volCryostat" || vol_sub_after == "volTPCActiveInner") inLArAfter++;
-	else outLArAfter++;
+    else outLArAfter++;
 
-	//std::cout << "vol BEFORE: " << vol_before << "; AFTER: " << vol_after << std::endl;
 
-    TLorentzVector pos(xPosition, yPosition, zPosition, time);
-    TLorentzVector mom(xMomentum, yMomentum, zMomentum, energy);
-    simb::MCParticle part(i, pdg, "primary", firstMother, mass, status);
+
+    TLorentzVector pos(x0, y0, z0, 0);
+    TLorentzVector mom(px_lab, py_lab, pz_lab, E_lab);
+    // simb::MCParticle part(i, PartID, "primary", firstMother, mass, status);
+    simb::MCParticle part(i, PartID, "primary");
     part.AddTrajectoryPoint(pos, mom); // file is in mm but we want cm
 
-	//if (std::fabs(pdg) == 211 && energy < 10.) lowPiE = true; // Skip if pion too high energy
 
     truth.Add(part);
-    // std::cout << i << "  Particle added with Pdg " << part.PdgCode() << ", Mother " << 
-	//	 part.Mother() << ", track id " << part.TrackId() << ", ene " << part.E() << std::endl;
 
-    fPx->Fill(xMomentum);
-    fPy->Fill(yMomentum);
-    fPz->Fill(zMomentum);
-    fx->Fill(xPosition);
-    fy->Fill(yPosition);
-    fz->Fill(zPosition);
-	if (vol_sub_after == "volTPCActiveInner") {
-      fTPCx->Fill(xPosition);
-      fTPCy->Fill(yPosition);
-      fTPCz->Fill(zPosition);
-	}
-    fxy->Fill(xPosition, yPosition);
-    fzy->Fill(zPosition, yPosition);
-    fxz->Fill(xPosition, zPosition);
-    //fEnergyTot->Fill(energy);
-	total_energy += energy;
+    fPx->Fill(px_lab);
+    fPy->Fill(py_lab);
+    fPz->Fill(pz_lab);
+    fx->Fill(x0);
+    fy->Fill(y0);
+    fz->Fill(z0);
 
-	if (std::fabs(pdg) == 13 || std::fabs(pdg) == 11) {
-      fPxLep->Fill(xMomentum);
-      fPyLep->Fill(yMomentum);
-      fPzLep->Fill(zMomentum);
-      fPxyLep->Fill(xMomentum, yMomentum);
-	  fEnergyLep->Fill(energy);
-    } else if (std::fabs(pdg) == 211) {
-      fPxPi->Fill(xMomentum);
-      fPyPi->Fill(yMomentum);
-      fPzPi->Fill(zMomentum);
-      fPxyPi->Fill(xMomentum, yMomentum);
-	  fEnergyPi->Fill(energy);
+    fPw->Fill(Pw);
+    fNw->Fill(Nw);
+    fM4->Fill(M4);
+    fUa4->Fill(Ua4);
+    fLn->Fill(Ln);
+    fthetaN->Fill(thetaN);
+    fphiN->Fill(phiN);
+    fxf->Fill(xf);
+    fyf->Fill(yf);
+    fzf->Fill(zf);
+    fGamma_PtoN->Fill(Gamma_PtoN);
+    fB_P->Fill(B_P);
+    fGamma_N->Fill(Gamma_N);
+    fB_N->Fill(B_N);
+    ft_N->Fill(t_N);
+    ft_nu->Fill(t_nu);
+    fPoT_f->Fill(PoT_f);
+    
+
+    if (vol_sub_after == "volTPCActiveInner") {
+        fTPCx->Fill(x0);
+        fTPCy->Fill(y0);
+        fTPCz->Fill(z0);
     }
+
+    fxy->Fill(x0, y0);
+    fzy->Fill(z0, y0);
+    fxz->Fill(x0, z0);
+
+    total_energy += E_lab;
+
+    if (std::fabs(PartID) == 13 || std::fabs(PartID) == 11) {
+
+      fPxLep->Fill(px_lab);
+      fPyLep->Fill(py_lab);
+      fPzLep->Fill(pz_lab);
+      fPxyLep->Fill(px_lab, py_lab);
+      fEnergyLep->Fill(E_lab);
+
+    } else if (std::fabs(PartID) == 211) {
+
+        fPxPi->Fill(px_lab);
+        fPyPi->Fill(py_lab);
+        fPzPi->Fill(pz_lab);
+        fPxyPi->Fill(px_lab, py_lab);
+        fEnergyPi->Fill(E_lab);
+      }
   }
   fEnergyTot->Fill(total_energy);
-  //if (lowPiE) truthcol->push_back(truth);
-
   truthcol->push_back(truth);
   e.put(std::move(truthcol));
   fEventsPerSubRun++;
@@ -385,8 +496,8 @@ void evgen::HepMCFileGen::produce(art::Event & e)
 
 //------------------------------------------------------------------------------
 void evgen::HepMCFileGen::endJob() {
-  std::cout << "\n Before translation: InLAr = " << inLArBefore << "; OutLAr = " << outLArBefore << std::endl;
-  std::cout << "\n After translation: InLAr = " << inLArAfter << "; OutLAr = " << outLArAfter << std::endl;
+  //std::cout << "\n Before translation: InLAr = " << inLArBefore << "; OutLAr = " << outLArBefore << std::endl;
+  //std::cout << "\n After translation: InLAr = " << inLArAfter << "; OutLAr = " << outLArAfter << std::endl;
 }
 
 //------------------------------------------------------------------------------
