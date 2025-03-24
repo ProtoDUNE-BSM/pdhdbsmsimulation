@@ -19,10 +19,10 @@ echo "$FCL_FILE, $WOBCONF, $FLAV, $DECAY, $NEVENTS and $NSKIP"
 WOBDIR=${WOBCONF}
 
 # dCache directories for input/ouput
-#SCRATCHDIR=/pnfs/dune/scratch/users/chasnip/ProtoDUNEBSM/NeutrinoSim
-#XROOTDSCRATCHDIR=root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/scratch/users/chasnip/ProtoDUNEBSM/NeutrinoSim
-SCRATCHDIR=/pnfs/dune/scratch/users/chasnip/ProtoDUNEBSM/NeutrinoSim_v2
-XROOTDSCRATCHDIR=root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/scratch/users/chasnip/ProtoDUNEBSM/NeutrinoSim_v2
+#SCRATCHDIR=/pnfs/dune/scratch/users/chasnip/ProtoDUNEBSM/NeutrinoSim_v2
+SCRATCHDIR=/pnfs/dune/scratch/users/chasnip/ProtoDUNEBSM/TrainingTestNuSim
+#XROOTDSCRATCHDIR=root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/scratch/users/chasnip/ProtoDUNEBSM/NeutrinoSim_v2
+XROOTDSCRATCHDIR=root://fndca1.fnal.gov:1094/pnfs/fnal.gov/usr/dune/scratch/users/chasnip/ProtoDUNEBSM/TrainingTestNuSim
 
 # Names of ouput files for different stages
 
@@ -31,6 +31,7 @@ DECAYDIR="decay${DECAY}"
 
 GENDIR="gen"
 DETSIMDIR="detsim"
+TRIGDIR="trig"
 RECODIR="reco"
 
 GENOUTFILENAME="${WOBCONF}_${FLAV}_decaymode${DECAY}_gen_${SkipEvents}_${NEvents}_${CLUSTER}_${PROCESS}.root"
@@ -43,6 +44,7 @@ RECOOUTFILENAME="${WOBCONF}_${FLAV}_decaymode${DECAY}_recotriggereddetsim2g4gen_
 
 GENPATH=${WOBDIR}/${FLAVDIR}/${DECAYDIR}/${GENDIR}
 DETSIMPATH=${WOBDIR}/${FLAVDIR}/${DECAYDIR}/${DETSIMDIR}
+TRIGPATH=${WOBDIR}/${FLAVDIR}/${DECAYDIR}/${TRIGDIR}
 RECOPATH=${WOBDIR}/${FLAVDIR}/${DECAYDIR}/${RECODIR}
 
 # Check grid node directories
@@ -168,6 +170,9 @@ if [ ! -e ${TRIGOUTFILENAME} ]; then
   LOGYLOG "[ERROR]: Failed to produce expected triggered file."
   exit 1
 fi
+LOGYLOG "ifdh cp -D ${TRIGOUTFILENAME} ${SCRATCHDIR}/${TRIGPATH}"
+ifdh cp -D ${TRIGOUTFILENAME} ${SCRATCHDIR}/${TRIGPATH}
+#rm ${TRIGOUTFILENAME}
 
 # Do reconstruction (with filtering)
 lar -c ${INPUT_TAR_DIR_LOCAL}/protodunedm/srcs/pdhdbsmsimulation/example/runPandoraNeutrinoMC.fcl -n ${NEvents} -o ${RECOOUTFILENAME} -s ${TRIGOUTFILENAME}

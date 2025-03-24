@@ -5,6 +5,7 @@ wnp04:
   numu: 
   {
     pdg: 14
+    wildcard: "wnp04/gsimple_14_fluxes_from_*.root"
     decaymode: [
       "wnp04/gsimple_14_fluxes_from_130_3body_decay_wnp04_XY_final.root",
       "wnp04/gsimple_14_fluxes_from_211_2body_decay_wnp04_XY_final.root",
