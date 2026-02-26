@@ -3,7 +3,7 @@ BEGIN_PROLOG
 standard_hepmcfilegen:
 {
   module_type:   "HepMCFileGen"
-  filename: "/exp/dune/app/users/pmohan/Signal_Salva/NP04_601MeV_detector_pimu_LarSoft.txt"
+  filename: "/exp/dune/app/users/hamza/ProtoDUNE-BSM/v10_01_04d00/srcs/pdhdbsmanalysis/example/HNL/nuemu/events-~ndecay-246MeV-1e-06-fromkaon-nuemu-wnp04.dat"
   EventsPerPOT: 10
 }
 
