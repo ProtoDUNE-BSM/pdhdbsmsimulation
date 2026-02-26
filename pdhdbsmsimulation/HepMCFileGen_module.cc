@@ -53,472 +53,483 @@
 #include "art/Framework/Core/EDProducer.h"
 #include "art/Framework/Core/ModuleMacros.h"
 #include "art/Framework/Principal/Event.h"
-#include "art/Framework/Principal/Handle.h"
 #include "art/Framework/Principal/Run.h"
 #include "art/Framework/Principal/SubRun.h"
 #include "art/Framework/Services/Registry/ServiceHandle.h"
 #include "art_root_io/TFileService.h"
-#include "canvas/Persistency/Common/FindManyP.h"
 #include "canvas/Utilities/Exception.h"
 
 // Utility libraries
 #include "fhiclcpp/ParameterSet.h"
 #include "cetlib_except/exception.h"
 #include "messagefacility/MessageLogger/MessageLogger.h"
-//#include "CLHEP/Random/RandFlat.h"
 
 // ROOT libraries
 #include "TH1.h"
 #include "TH2.h"
-#include "TVector3.h"
 #include "TLorentzVector.h"
- 
-//#include "nutools/RandomUtils/NuRandomService.h"
-//#include "CLHEP/Random/RandFlat.h"
 
-#include <string>
-#include <iostream>
+// C++ standard library
+#include <cmath>
 #include <fstream>
+#include <limits>
+#include <memory>
 #include <sstream>
+#include <string>
+#include <vector>
 
-
-/* #include "ifdh.h"
-#include "ifdh_art/IFDHService/IFDH_service.h" // ifdh_ns::IFDH
-#undef USE_IFDH_SERVICE // ifdh for now
-*/
 namespace evgen {
+
+  // Conversion factor from metres (input file) to centimetres (LArSoft).
+  constexpr double kMtoCm = 100.0;
+
+  // Holds the 20 HNL production/decay parameters read per event.
+  struct HNLParameters {
+    int    Pw         = 0;
+    double Nw         = 0;
+    double M4         = 0;
+    double Ua4        = 0;
+    double Ln         = 0;
+    double x0         = 0;
+    double y0         = 0;
+    double z0         = 0;
+    double thetaN     = 0;
+    double phiN       = 0;
+    double xf         = 0;
+    double yf         = 0;
+    double zf         = 0;
+    double Gamma_PtoN = 0;
+    double B_P        = 0;
+    double Gamma_N    = 0;
+    double B_N        = 0;
+    double t_N        = 0;
+    double t_nu       = 0;
+    double PoT_f      = 0;
+  };
+
   class HepMCFileGen;
-}
+
+} // namespace evgen
+
+// =============================================================================
+// Class declaration
+// =============================================================================
 class evgen::HepMCFileGen : public art::EDProducer {
 public:
-  explicit HepMCFileGen(fhicl::ParameterSet const & p);
-  void produce(art::Event & e)                    override;
-  void beginJob()                                 override;
-  void endJob()                                   override;
-  void beginRun(art::Run & run)                   override;
-  void endSubRun(art::SubRun& sr)                 override;
+  explicit HepMCFileGen(fhicl::ParameterSet const& p);
+
+  void produce(art::Event& e)     override;
+  void beginJob()                 override;
+  void beginRun(art::Run& run)    override;
+  void endSubRun(art::SubRun& sr) override;
+
 private:
+  // --- helpers ---------------------------------------------------------------
+  std::vector<double> ComputeDetectorLimits() const;
+  void                BookHistograms();
+  HNLParameters       ReadHNLParameters(std::istringstream& iss,
+                                        const std::string& rawLine) const;
+  std::vector<std::string> ReadParticleLines();
+  void FillHNLHistograms(const HNLParameters& hnl) const;
+  void FillParticleHistograms(int pdg, double px, double py, double pz,
+                              double energy,
+                              double x, double y, double z) const;
 
-  void GetDetectorLimits();
-  void DefDetectorLimits();
-  geo::GeometryCore const *fTotalGeom;
-  std::stringstream geo_ss;
+  // --- data members ----------------------------------------------------------
+  const geo::Geometry* fGeom;               // Geometry service handle
+  std::vector<double>  fDetectorLimits;     // Active volume {Xmin,Xmax,Ymin,Ymax,Zmin,Zmax}
 
-  std::string fFilename;
-  std::ifstream* fInputFile;
-  
-  double         fEventsPerPOT;     ///< Number of events per POT (to be set)
-  int            fEventsPerSubRun;  ///< Keeps track of the number of processed events per subrun
-  // ifdh_ns::ifdh* fIFDH;             ///< (optional) flux file handling
+  std::string                    fFilename;  // Path to HepMC input file
+  std::unique_ptr<std::ifstream> fInputFile; // Input file stream (owned)
 
-  // Need to translate to LArSoft geometry coordinates
-  // Hard code dimensions of generated volume for events
-  //std::vector<double> fGenVolDimensions = {600., 700., 600.};
-  std::vector<double> fGenVolDimensions = {600., 600., 600.};
-  std::vector<double> fOriginTranslate;
+  double fEventsPerPOT;    // Events-per-POT scaling factor
+  int    fEventsPerSubRun; // Processed event counter (reset per sub-run)
 
-  int inLArBefore;
-  int outLArBefore;
-  int inLArAfter;
-  int outLArAfter;
+  // --- Momentum histograms ---------------------------------------------------
+  TH1D* fhPx          = nullptr;
+  TH1D* fhPy          = nullptr;
+  TH1D* fhPz          = nullptr;
+  TH1D* fhPxLep       = nullptr;
+  TH1D* fhPyLep       = nullptr;
+  TH1D* fhPzLep       = nullptr;
+  TH1D* fhPxPi        = nullptr;
+  TH1D* fhPyPi        = nullptr;
+  TH1D* fhPzPi        = nullptr;
+  TH2D* fhPxyLep      = nullptr;
+  TH2D* fhPxyPi       = nullptr;
 
-  // Visible particle energies
-  TH1D* fPx;
-  TH1D* fPy;
-  TH1D* fPz;
-  TH1D* fPxLep;
-  TH1D* fPyLep;
-  TH1D* fPzLep;
-  TH1D* fPxPi;
-  TH1D* fPyPi;
-  TH1D* fPzPi;
-  TH2D* fPxyLep;
-  TH2D* fPxyPi;
-  TH1D* fbx;
-  TH1D* fby;
-  TH1D* fbz;
-  TH1D* fx;
-  TH1D* fy;
-  TH1D* fz;
-  TH1D* fTPCx;
-  TH1D* fTPCy;
-  TH1D* fTPCz;
-  TH2D* fxy;
-  TH2D* fzy;
-  TH2D* fxz;
-  TH1D* fEnergyTot;
-  TH1D* fEnergyLep;
-  TH1D* fEnergyPi;
+  // --- Position histograms ---------------------------------------------------
+  TH1D* fhPosX        = nullptr;
+  TH1D* fhPosY        = nullptr;
+  TH1D* fhPosZ        = nullptr;
+  TH2D* fhXY          = nullptr;
+  TH2D* fhZY          = nullptr;
+  TH2D* fhXZ          = nullptr;
 
-  TH1D* fPw;
-  TH1D* fNw;
-  TH1D* fM4;
-  TH1D* fUa4;
-  TH1D* fLn;
-  TH1D* fthetaN;
-  TH1D* fphiN;
-  TH1D* fxf;
-  TH1D* fyf;
-  TH1D* fzf;
-  TH1D* fGamma_PtoN;
-  TH1D* fB_P;
-  TH1D* fGamma_N;
-  TH1D* fB_N;
-  TH1D* ft_N;
-  TH1D* ft_nu;
-  TH1D* fPoT_f;
+  // --- Energy histograms -----------------------------------------------------
+  TH1D* fhEnergyTot   = nullptr;
+  TH1D* fhEnergyLep   = nullptr;
+  TH1D* fhEnergyPi    = nullptr;
 
+  // --- HNL parameter histograms ----------------------------------------------
+  TH1D* fhPw          = nullptr;
+  TH1D* fhNw          = nullptr;
+  TH1D* fhM4          = nullptr;
+  TH1D* fhUa4         = nullptr;
+  TH1D* fhLn          = nullptr;
+  TH1D* fhThetaN      = nullptr;
+  TH1D* fhPhiN        = nullptr;
+  TH1D* fhXf          = nullptr;
+  TH1D* fhYf          = nullptr;
+  TH1D* fhZf          = nullptr;
+  TH1D* fhGammaPtoN   = nullptr;
+  TH1D* fhBP          = nullptr;
+  TH1D* fhGammaN      = nullptr;
+  TH1D* fhBN          = nullptr;
+  TH1D* fhTN          = nullptr;
+  TH1D* fhTNu         = nullptr;
+  TH1D* fhPoTf        = nullptr;
 };
-//------------------------------------------------------------------------------
-evgen::HepMCFileGen::HepMCFileGen(fhicl::ParameterSet const & p)
+
+// =============================================================================
+// Constructor
+// =============================================================================
+evgen::HepMCFileGen::HepMCFileGen(fhicl::ParameterSet const& p)
   : EDProducer{p}
-  , fFilename(p.get<std::string>("filename"))
-  , fInputFile(nullptr)
-  , fEventsPerPOT{p.get<double>("EventsPerPOT", -1.)}
-  , fEventsPerSubRun(0)
+  , fFilename{p.get<std::string>("filename")}
+  , fEventsPerPOT{p.get<double>("EventsPerPOT", -1.0)}
+  , fEventsPerSubRun{0}
 {
-  this->DefDetectorLimits();
-  produces< std::vector<simb::MCTruth>   >();
-  produces< sumdata::RunData, art::InRun >();
-  produces< sumdata::POTSummary, art::InSubRun >();
+  fGeom = &*art::ServiceHandle<geo::Geometry>();
+  fDetectorLimits = ComputeDetectorLimits();
+
+  produces<std::vector<simb::MCTruth>>();
+  produces<sumdata::RunData, art::InRun>();
+  produces<sumdata::POTSummary, art::InSubRun>();
 }
-//------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-void evgen::HepMCFileGen::beginJob(){
+// =============================================================================
+// beginJob – open input file and book histograms
+// =============================================================================
+void evgen::HepMCFileGen::beginJob()
+{
+  mf::LogInfo("HepMCFileGen") << "Opening input file: " << fFilename;
 
-  std::cout << "Filename : " << fFilename << std::endl;
-  fInputFile = new std::ifstream(fFilename.c_str(), std::ifstream::in);
+  fInputFile = std::make_unique<std::ifstream>(fFilename, std::ifstream::in);
+  if (!fInputFile->good()) {
+    throw cet::exception("HepMCFileGen")
+      << "Input text file " << fFilename << " cannot be read.\n";
+  }
 
-  // check that the file is a good one
-  if( !fInputFile->good() )
-    throw cet::exception("HepMCFileGen") << "input text file "
-					<< fFilename
-					<< " cannot be read.\n";
-
-  inLArBefore = 0;
-  outLArBefore = 0;
-  inLArAfter = 0;
-  outLArAfter = 0;
-
-  art::ServiceHandle<art::TFileService> tfs;
-  fPx = tfs->make<TH1D>("hPx",";x-Momentum (GeV/c)",20,0,2);
-  fPy = tfs->make<TH1D>("hPy",";y-Momentum (GeV/c)",20,0,2);
-  fPz = tfs->make<TH1D>("hPz",";z-Momentum (GeV/c)",50,0,200);
-
-  fPxLep = tfs->make<TH1D>("hPxLep",";x-Momentum Lep. (GeV/c)",20,0,2);
-  fPyLep = tfs->make<TH1D>("hPyLep",";y-Momentum Lep. (GeV/c)",20,0,2);
-  fPzLep = tfs->make<TH1D>("hPzLep",";z-Momentum Lep. GeV/c)",50,0,200);
-
-  fPxPi = tfs->make<TH1D>("hPxPi",";x-Momentum #pi (GeV/c)",20,0,2);
-  fPyPi = tfs->make<TH1D>("hPyPi",";y-Momentum #pi (GeV/c)",20,0,2);
-
-  fPzPi = tfs->make<TH1D>("hPzPi",";z-Momentum #pi (GeV/c)",50,0,200);
-
-  fPxyLep = tfs->make<TH2D>("hPxyLep",";x-Momentum Lep. (GeV/c);y-Momentum Lep. (GeV/c)",20,0, 2, 20, 0, 2);  
-  fPxyPi = tfs->make<TH2D>("hPxyPi",";x-Momentum #pi (GeV/c);y-Momentum #pi (GeV/c)",20,0, 2, 20, 0, 2);  
-
-  fbx = tfs->make<TH1D>("hbx",";x-Position (cm)",40,-400,400);
-  fby = tfs->make<TH1D>("hby",";y-Position (cm)",40,-400,400);
-  fbz = tfs->make<TH1D>("hbz",";z-Position (cm)",40,-400,400);
-
-  fx = tfs->make<TH1D>("hx",";x-Position (cm)",40,-400,400);
-  fy = tfs->make<TH1D>("hy",";y-Position (cm)",50,-100,900);
-  fz = tfs->make<TH1D>("hz",";z-Position (cm)",50,-100,900);
-
-  fTPCx = tfs->make<TH1D>("hTPCx",";x-Position in TPC (cm)",40,-400,400);
-  fTPCy = tfs->make<TH1D>("hTPCy",";y-Position in TPC (cm)",50,-100,900);
-  fTPCz = tfs->make<TH1D>("hTPCz",";z-Position in TPC (cm)",50,-100,900);
-
-  fxy = tfs->make<TH2D>("hxy",";x-Position (cm);y-Position (cm)",40,-400,400,50,-100,900);
-  fzy = tfs->make<TH2D>("hzy",";z-Position (cm);y-Position (cm)",50,-100,900,50,-100,900);
-  fxz = tfs->make<TH2D>("hxz",";x-Position (cm);z-Position (cm)",40,-400,400,50,-100,900);
-
-  fEnergyTot = tfs->make<TH1D>("hEnergyTot",";Total Energy (GeV)",50,0,200);
-  fEnergyLep = tfs->make<TH1D>("hEnergyLep",";Total Energy Lep. (GeV)",50,0,200);
-  fEnergyPi = tfs->make<TH1D>("hEnergyPi",";Total Energy #pi (GeV)",50,0,200);
-
-  fPw = tfs->make<TH1D>("hPw",";Pw",50,0,200);
-  fNw = tfs->make<TH1D>("hNw",";Nw",50,0,200);
-  fM4 = tfs->make<TH1D>("hM4",";M4",50,0,200);
-  fUa4 = tfs->make<TH1D>("hUa4",";Ua4",50,0,200);
-  fLn = tfs->make<TH1D>("hLn",";Ln",50,0,200);
-  fthetaN = tfs->make<TH1D>("hthetaN",";thetaN",50,0,200);
-  fphiN = tfs->make<TH1D>("hphiN",";phiN",50,0,200);
-  fxf = tfs->make<TH1D>("hxf",";xf",50,0,200);
-  fyf = tfs->make<TH1D>("hyf",";yf",50,0,200);
-  fzf = tfs->make<TH1D>("hzf",";zf",50,0,200);
-  fGamma_PtoN = tfs->make<TH1D>("hGamma_PtoN",";Gamma_PtoN",50,0,200);
-  fB_P = tfs->make<TH1D>("hB_P",";B_P",50,0,200);
-  fGamma_N = tfs->make<TH1D>("hGamma_N",";Gamma_N",50,0,200);
-  fB_N = tfs->make<TH1D>("hB_N",";B_N",50,0,200);
-  ft_N = tfs->make<TH1D>("ht_N",";t_N",50,0,200);
-  ft_nu = tfs->make<TH1D>("ht_nu",";t_nu",50,0,200);
-  fPoT_f = tfs->make<TH1D>("hPoT_f",";PoT_f",50,0,200);
-
-
-  return;
+  BookHistograms();
 }
-//------------------------------------------------------------------------------
-void evgen::HepMCFileGen::beginRun(art::Run& run){
+
+// =============================================================================
+// beginRun
+// =============================================================================
+void evgen::HepMCFileGen::beginRun(art::Run& run)
+{
   fEventsPerSubRun = 0;
   art::ServiceHandle<geo::Geometry const> geo;
   run.put(std::make_unique<sumdata::RunData>(geo->DetectorName()), art::fullRun());
 }
-//------------------------------------------------------------------------------
-void evgen::HepMCFileGen::endSubRun(art::SubRun& sr){
-  auto p = std::make_unique<sumdata::POTSummary>();
-  p->totpot     = fEventsPerSubRun * fEventsPerPOT;
-  p->totgoodpot = fEventsPerSubRun * fEventsPerPOT;
-  sr.put(std::move(p), art::subRunFragment());
-  return;
-}
-//------------------------------------------------------------------------------
-void evgen::HepMCFileGen::produce(art::Event & e){
 
-  if( !fInputFile->good() || fInputFile->peek() == EOF) {
-    throw cet::exception("HepMCFileGen") << "input text file " << " cannot be read in produce().\n";
+// =============================================================================
+// endSubRun – write POT summary
+// =============================================================================
+void evgen::HepMCFileGen::endSubRun(art::SubRun& subrun)
+{
+  auto pot = std::make_unique<sumdata::POTSummary>();
+  pot->totpot     = fEventsPerSubRun * fEventsPerPOT;
+  pot->totgoodpot = fEventsPerSubRun * fEventsPerPOT;
+  subrun.put(std::move(pot), art::subRunFragment());
+}
+
+// =============================================================================
+// produce – main event loop body
+// =============================================================================
+void evgen::HepMCFileGen::produce(art::Event& e)
+{
+  if (!fInputFile->good() || fInputFile->peek() == EOF) {
+    throw cet::exception("HepMCFileGen")
+      << "Input text file cannot be read in produce().\n";
   }
 
-  std::unique_ptr< std::vector<simb::MCTruth> > truthcol(new std::vector<simb::MCTruth>);
+  auto truthcol = std::make_unique<std::vector<simb::MCTruth>>();
   simb::MCTruth truth;
 
+  // --- Read event header (### eventNo) ---------------------------------------
+  std::string line;
+  std::getline(*fInputFile, line);
+  std::istringstream iss(line);
 
+  std::string hashToken;
+  int eventNo = 0;
+  iss >> hashToken >> eventNo;
+  mf::LogInfo("HepMCFileGen") << "Event number: " << eventNo + 1;
 
-  std::string hashString = "XXXX";
-  int  eventNo    = 0;
-  unsigned short nParticles          = 2;
+  // --- Read HNL parameters (20 values) --------------------------------------
+  std::getline(*fInputFile, line);
+  iss.clear();
+  iss.str(line);
+  const HNLParameters hnl = ReadHNLParameters(iss, line);
 
+  mf::LogInfo("HepMCFileGen")
+    << "HNL decay position (m): xf=" << hnl.xf
+    << ", yf=" << hnl.yf << ", zf=" << hnl.zf;
 
-  int    Pw = 0;
-  double Nw = 0;
-  double M4 = 0;
-  double Ua4= 0;
-  double Ln = 0;
-  double x0 = 0;
-  double y0 = 0;
-  double z0 = 0;
-  double thetaN = 0;
-  double phiN  = 0;
-  double xf = 0;
-  double yf = 0;
-  double zf = 0;
-  double Gamma_PtoN = 0;
-  double B_P = 0;
-  double Gamma_N = 0;
-  double B_N = 0;
-  double t_N = 0;
-  double t_nu = 0;
-  double PoT_f = 0;
+  // --- Read daughter particle lines ------------------------------------------
+  const auto particleLines = ReadParticleLines();
 
+  // --- Process each particle -------------------------------------------------
+  const double zHalfLength = (fDetectorLimits[5] - fDetectorLimits[4]) / 2.0;
+  double totalEnergy = 0.0;
+  int particleIndex = 0;
 
+  for (const auto& pLine : particleLines) {
+    iss.clear();
+    iss.str(pLine);
 
-  int PartID = 0;
-  double E_lab = 0;
-  double px_lab = 0;
-  double py_lab = 0;
-  double pz_lab = 0;
-
-
-
-  // int            status              = 0;
-  // int            pdg                 = 0;
-  // int            firstMother         = 0;
-  // int            secondMother        = 0;
-  // int            firstDaughter       = 0;
-  // int            secondDaughter      = 0;
-  // double         xMomentum           = 0.;
-  // double         yMomentum           = 0.;
-  // double         zMomentum           = 0.;
-  // double         energy              = 0.;
-  // double         mass                = 0.;
-  // double         xPosition           = 0.;
-  // double         yPosition           = 0.;
-  // double         zPosition           = 0.;
-  // double         time                = 0.;
-
-  // read in line to get event number and number of particles
-  
-    
-  std::string oneLine;
-  std::getline(*fInputFile, oneLine);
-  std::istringstream inputLine;
-  inputLine.str(oneLine);
-  inputLine >> hashString >> eventNo;
-
-  std::cout << "Event number: " << eventNo << std::endl;
-
-  std::getline(*fInputFile, oneLine);
-  inputLine.clear();
-  inputLine.str(oneLine);
-  inputLine >> Pw >> Nw >>M4 >> Ua4 >> Ln >>x0>>y0>>z0>>thetaN>>phiN>>xf>>yf>>zf>>Gamma_PtoN>>B_P>>Gamma_N>>B_N>>t_N>>t_nu>>PoT_f;
-
-
-  double total_energy(0);
-
-
-
-  for(unsigned short i = 0; i < nParticles; ++i){
-
-    std::getline(*fInputFile, oneLine);
-    inputLine.clear();
-    inputLine.str(oneLine);
-    inputLine >> PartID >> E_lab >> px_lab >> py_lab >> pz_lab;
-
-
-
-    // std::cout << "Particle ID: " << PartID << std::endl;
-
-
-
-
-    std::string vol_before = fTotalGeom->VolumeName({x0*0.1, y0*0.1, z0*0.1});
-
-    std::string vol_sub_before =  vol_before.substr(0, vol_before.find("_"));
-    if (vol_sub_before == "volCryostat" || vol_sub_before == "volTPCActiveInner") inLArBefore++;
-    else outLArBefore++;
-      
-    fbx->Fill(x0*0.1);
-    fby->Fill(y0*0.1);
-    fbz->Fill(z0*0.1);
-
-    x0 = x0 * 0.1 + fOriginTranslate.at(0);
-    y0 = y0 * 0.1 + fOriginTranslate.at(1);
-    z0 = z0 * 0.1 + fOriginTranslate.at(2);
-    std::string vol_after = fTotalGeom->VolumeName({x0, y0, z0});
-    
-    std::string vol_sub_after =  vol_after.substr(0, vol_after.find("_"));
-    if (vol_sub_after == "volCryostat" || vol_sub_after == "volTPCActiveInner") inLArAfter++;
-    else outLArAfter++;
-
-
-
-    TLorentzVector pos(x0, y0, z0, 0);
-    TLorentzVector mom(px_lab, py_lab, pz_lab, E_lab);
-    // simb::MCParticle part(i, PartID, "primary", firstMother, mass, status);
-    simb::MCParticle part(i, PartID, "primary");
-    part.AddTrajectoryPoint(pos, mom); // file is in mm but we want cm
-
-
-    truth.Add(part);
-
-    fPx->Fill(px_lab);
-    fPy->Fill(py_lab);
-    fPz->Fill(pz_lab);
-    fx->Fill(x0);
-    fy->Fill(y0);
-    fz->Fill(z0);
-
-    fPw->Fill(Pw);
-    fNw->Fill(Nw);
-    fM4->Fill(M4);
-    fUa4->Fill(Ua4);
-    fLn->Fill(Ln);
-    fthetaN->Fill(thetaN);
-    fphiN->Fill(phiN);
-    fxf->Fill(xf);
-    fyf->Fill(yf);
-    fzf->Fill(zf);
-    fGamma_PtoN->Fill(Gamma_PtoN);
-    fB_P->Fill(B_P);
-    fGamma_N->Fill(Gamma_N);
-    fB_N->Fill(B_N);
-    ft_N->Fill(t_N);
-    ft_nu->Fill(t_nu);
-    fPoT_f->Fill(PoT_f);
-    
-
-    if (vol_sub_after == "volTPCActiveInner") {
-        fTPCx->Fill(x0);
-        fTPCy->Fill(y0);
-        fTPCz->Fill(z0);
+    int    pdg = 0;
+    double eLab = 0, px = 0, py = 0, pz = 0;
+    if (!(iss >> pdg >> eLab >> px >> py >> pz)) {
+      mf::LogWarning("HepMCFileGen")
+        << "Failed to parse particle line: " << pLine;
+      continue;
     }
 
-    fxy->Fill(x0, y0);
-    fzy->Fill(z0, y0);
-    fxz->Fill(x0, z0);
+    mf::LogDebug("HepMCFileGen")
+      << "Particle " << particleIndex << ": PDG=" << pdg
+      << ", E=" << eLab << " GeV, Px=" << px
+      << ", Py=" << py << ", Pz=" << pz << " GeV/c";
 
-    total_energy += E_lab;
+    // Convert decay position from metres to cm; centre in z
+    const double posX = hnl.xf * kMtoCm;
+    const double posY = hnl.yf * kMtoCm;
+    const double posZ = hnl.zf * kMtoCm + zHalfLength;
 
-    if (std::fabs(PartID) == 13 || std::fabs(PartID) == 11) {
+    MF_LOG_DEBUG("HepMCFileGen")
+      << "  TPC Z length (cm): " << 2.0 * zHalfLength
+      << "  Z limits (cm): [" << fDetectorLimits[4]
+      << ", " << fDetectorLimits[5] << "]";
 
-      fPxLep->Fill(px_lab);
-      fPyLep->Fill(py_lab);
-      fPzLep->Fill(pz_lab);
-      fPxyLep->Fill(px_lab, py_lab);
-      fEnergyLep->Fill(E_lab);
+    // Build MCParticle and add to truth record
+    TLorentzVector position(posX, posY, posZ, 0.0);
+    TLorentzVector momentum(px, py, pz, eLab);
 
-    } else if (std::fabs(PartID) == 211) {
+    simb::MCParticle particle(particleIndex, pdg, "primary");
+    particle.AddTrajectoryPoint(position, momentum);
+    truth.Add(particle);
 
-        fPxPi->Fill(px_lab);
-        fPyPi->Fill(py_lab);
-        fPzPi->Fill(pz_lab);
-        fPxyPi->Fill(px_lab, py_lab);
-        fEnergyPi->Fill(E_lab);
-      }
+    // Fill histograms
+    FillParticleHistograms(pdg, px, py, pz, eLab, posX, posY, posZ);
+    FillHNLHistograms(hnl);
+
+    totalEnergy += eLab;
+    ++particleIndex;
   }
-  fEnergyTot->Fill(total_energy);
+
+  fhEnergyTot->Fill(totalEnergy);
   truthcol->push_back(truth);
   e.put(std::move(truthcol));
-  fEventsPerSubRun++;
-  return;
+  ++fEventsPerSubRun;
 }
 
-//------------------------------------------------------------------------------
-void evgen::HepMCFileGen::endJob() {
-  //std::cout << "\n Before translation: InLAr = " << inLArBefore << "; OutLAr = " << outLArBefore << std::endl;
-  //std::cout << "\n After translation: InLAr = " << inLArAfter << "; OutLAr = " << outLArAfter << std::endl;
-}
-
-//------------------------------------------------------------------------------
-void evgen::HepMCFileGen::DefDetectorLimits()
+// =============================================================================
+// ReadHNLParameters – parse the 20-value HNL parameter line
+// =============================================================================
+evgen::HNLParameters evgen::HepMCFileGen::ReadHNLParameters(
+    std::istringstream& iss, const std::string& rawLine) const
 {
-  this->GetDetectorLimits();     
-	
-  std::cout << geo_ss.str();
-			                                   
-  return;                        
-}                                
+  HNLParameters h;
+  if (!(iss >> h.Pw >> h.Nw >> h.M4 >> h.Ua4 >> h.Ln
+            >> h.x0 >> h.y0 >> h.z0 >> h.thetaN >> h.phiN
+            >> h.xf >> h.yf >> h.zf >> h.Gamma_PtoN >> h.B_P
+            >> h.Gamma_N >> h.B_N >> h.t_N >> h.t_nu >> h.PoT_f)) {
+    throw cet::exception("HepMCFileGen")
+      << "Failed to parse HNL parameters from line: " << rawLine << "\n";
+  }
+  return h;
+}
 
-//------------------------------------------------------------------------------
-void evgen::HepMCFileGen::GetDetectorLimits(){
+// =============================================================================
+// ReadParticleLines – collect lines until the next "###" or EOF
+// =============================================================================
+std::vector<std::string> evgen::HepMCFileGen::ReadParticleLines()
+{
+  std::vector<std::string> lines;
+  std::string line;
 
-  fTotalGeom = lar::providerFrom<geo::Geometry>();
+  while (std::getline(*fInputFile, line)) {
+    if (line.find("###") != std::string::npos) {
+      // Rewind so the next call to produce() sees this header
+      fInputFile->seekg(
+        -static_cast<std::streamoff>(line.length() + 1), std::ios::cur);
+      break;
+    }
+    if (!line.empty()) {
+      lines.push_back(line);
+    }
+  }
+  return lines;
+}
 
-  geo::BoxBoundedGeo fDetGeom = fTotalGeom->DetectorEnclosureBox("volDetEnclosure");
+// =============================================================================
+// FillHNLHistograms
+// =============================================================================
+void evgen::HepMCFileGen::FillHNLHistograms(const HNLParameters& h) const
+{
+  fhPw->Fill(h.Pw);
+  fhNw->Fill(h.Nw);
+  fhM4->Fill(h.M4);
+  fhUa4->Fill(h.Ua4);
+  fhLn->Fill(h.Ln);
+  fhThetaN->Fill(h.thetaN);
+  fhPhiN->Fill(h.phiN);
+  fhXf->Fill(h.xf);
+  fhYf->Fill(h.yf);
+  fhZf->Fill(h.zf);
+  fhGammaPtoN->Fill(h.Gamma_PtoN);
+  fhBP->Fill(h.B_P);
+  fhGammaN->Fill(h.Gamma_N);
+  fhBN->Fill(h.B_N);
+  fhTN->Fill(h.t_N);
+  fhTNu->Fill(h.t_nu);
+  fhPoTf->Fill(h.PoT_f);
+}
 
-  geo_ss << "\n" << "Det enclosure: " << fDetGeom.Min() << " -- "
-     << fDetGeom.Max() << " cm => ( " << fDetGeom.SizeX() << " x "
-     << fDetGeom.SizeY() << " x " << fDetGeom.SizeZ() << " ) cm^3"
-	 << "Det Centre: (" << fDetGeom.CenterX() << ", " << fDetGeom.CenterY()
-	 << ", " << fDetGeom.CenterZ() << ")"; 
+// =============================================================================
+// FillParticleHistograms
+// =============================================================================
+void evgen::HepMCFileGen::FillParticleHistograms(
+    int pdg, double px, double py, double pz,
+    double energy, double x, double y, double z) const
+{
+  fhPx->Fill(px);
+  fhPy->Fill(py);
+  fhPz->Fill(pz);
 
-  for (auto const& cryostat : fTotalGeom->Iterate<geo::CryostatGeo>()) {
-    geo_ss << "\n" << "Cryostat centre point: " << cryostat.GetCenter() << "\n";
-	cryostat.PrintCryostatInfo(geo_ss, "  ", cryostat.MaxVerbosity);
+  fhPosX->Fill(x);
+  fhPosY->Fill(y);
+  fhPosZ->Fill(z);
 
-	double totalTPCVol(0);
-    double totalGenVol = fGenVolDimensions.at(0) * fGenVolDimensions.at(1) * fGenVolDimensions.at(2);
+  fhXY->Fill(x, y);
+  fhZY->Fill(z, y);
+  fhXZ->Fill(x, z);
 
-    const unsigned int nTPCs = cryostat.NTPC();
-	for (unsigned int t = 0; t < nTPCs; ++t) {
-      const geo::TPCGeo& tpc = cryostat.TPC(t);
-      totalTPCVol += tpc.TotalVolume()->Capacity();
+  const int absPdg = std::abs(pdg);
 
-	  geo_ss << "\n" << "    ";
-	  tpc.PrintTPCInfo(geo_ss, "    ", tpc.MaxVerbosity);
-	  if (t == 1) {
-	    fOriginTranslate.push_back(0.);
-	    fOriginTranslate.push_back(fGenVolDimensions.at(1) / 2.);
-	    fOriginTranslate.push_back(fGenVolDimensions.at(2) / 2.);
-	  }
-	}
-	geo_ss << "\n Translation coords: " << fOriginTranslate.at(0) << ", " 
-		<< fOriginTranslate.at(1) << ", " << fOriginTranslate.at(2) << std::endl;
-	geo_ss << "\n Events generated in volume: " << totalGenVol << " cm^3"
-		<< "\n Total TPC volume: " << totalTPCVol  << " cm^3" << std::endl;
+  // This must be replaced or generalized if more particle types are added to the input file
+  // This does not affect the MCTruth record, which is built directly from the input file without filtering
+  if (absPdg == 13 || absPdg == 11) {
+    // Lepton (mu or e)
+    fhPxLep->Fill(px);
+    fhPyLep->Fill(py);
+    fhPzLep->Fill(pz);
+    fhPxyLep->Fill(px, py);
+    fhEnergyLep->Fill(energy);
+  } else if (absPdg == 211) {
+    // Charged pion
+    fhPxPi->Fill(px);
+    fhPyPi->Fill(py);
+    fhPzPi->Fill(pz);
+    fhPxyPi->Fill(px, py);
+    fhEnergyPi->Fill(energy);
+  }
+}
+
+// =============================================================================
+// BookHistograms – create all TH1/TH2 objects via TFileService
+// =============================================================================
+void evgen::HepMCFileGen::BookHistograms()
+{
+  art::ServiceHandle<art::TFileService> tfs;
+
+  // Momentum
+  fhPx    = tfs->make<TH1D>("hPx", ";p_{x} (GeV/c)", 20, 0, 2);
+  fhPy    = tfs->make<TH1D>("hPy", ";p_{y} (GeV/c)", 20, 0, 2);
+  fhPz    = tfs->make<TH1D>("hPz", ";p_{z} (GeV/c)", 50, 0, 200);
+
+  fhPxLep = tfs->make<TH1D>("hPxLep", ";p_{x}^{lep} (GeV/c)", 20, 0, 2);
+  fhPyLep = tfs->make<TH1D>("hPyLep", ";p_{y}^{lep} (GeV/c)", 20, 0, 2);
+  fhPzLep = tfs->make<TH1D>("hPzLep", ";p_{z}^{lep} (GeV/c)", 50, 0, 200);
+
+  fhPxPi  = tfs->make<TH1D>("hPxPi", ";p_{x}^{#pi} (GeV/c)", 20, 0, 2);
+  fhPyPi  = tfs->make<TH1D>("hPyPi", ";p_{y}^{#pi} (GeV/c)", 20, 0, 2);
+  fhPzPi  = tfs->make<TH1D>("hPzPi", ";p_{z}^{#pi} (GeV/c)", 50, 0, 200);
+
+  fhPxyLep = tfs->make<TH2D>("hPxyLep",
+    ";p_{x}^{lep} (GeV/c);p_{y}^{lep} (GeV/c)", 20, 0, 2, 20, 0, 2);
+  fhPxyPi  = tfs->make<TH2D>("hPxyPi",
+    ";p_{x}^{#pi} (GeV/c);p_{y}^{#pi} (GeV/c)", 20, 0, 2, 20, 0, 2);
+
+  // Positions (birth / general / TPC)
+  fhPosX   = tfs->make<TH1D>("hx",    ";x position (cm)", 40, -400, 400);
+  fhPosY   = tfs->make<TH1D>("hy",    ";y position (cm)", 50, -100, 900);
+  fhPosZ   = tfs->make<TH1D>("hz",    ";z position (cm)", 50, -100, 900);
+
+  fhXY = tfs->make<TH2D>("hxy", ";x (cm);y (cm)", 40, -400, 400, 50, -100, 900);
+  fhZY = tfs->make<TH2D>("hzy", ";z (cm);y (cm)", 50, -100, 900, 50, -100, 900);
+  fhXZ = tfs->make<TH2D>("hxz", ";x (cm);z (cm)", 40, -400, 400, 50, -100, 900);
+
+  // Energy
+  fhEnergyTot = tfs->make<TH1D>("hEnergyTot", ";E_{tot} (GeV)", 50, 0, 200);
+  fhEnergyLep = tfs->make<TH1D>("hEnergyLep", ";E_{lep} (GeV)", 50, 0, 200);
+  fhEnergyPi  = tfs->make<TH1D>("hEnergyPi",  ";E_{#pi} (GeV)", 50, 0, 200);
+
+  // HNL parameters
+  fhPw        = tfs->make<TH1D>("hPw",          ";P_{w}",           50, 0, 200);
+  fhNw        = tfs->make<TH1D>("hNw",          ";N_{w}",           50, 0, 200);
+  fhM4        = tfs->make<TH1D>("hM4",          ";M_{4} (GeV)",     50, 0, 200);
+  fhUa4       = tfs->make<TH1D>("hUa4",         ";|U_{a4}|^{2}",   50, 0, 200);
+  fhLn        = tfs->make<TH1D>("hLn",          ";L_{N} (m)",       50, 0, 200);
+  fhThetaN    = tfs->make<TH1D>("hthetaN",       ";#theta_{N}",     50, 0, 200);
+  fhPhiN      = tfs->make<TH1D>("hphiN",         ";#phi_{N}",      50, 0, 200);
+  fhXf        = tfs->make<TH1D>("hxf",           ";x_{f} (m)",     50, 0, 200);
+  fhYf        = tfs->make<TH1D>("hyf",           ";y_{f} (m)",     50, 0, 200);
+  fhZf        = tfs->make<TH1D>("hzf",           ";z_{f} (m)",     50, 0, 200);
+  fhGammaPtoN = tfs->make<TH1D>("hGamma_PtoN",   ";#Gamma_{P#rightarrowN}", 50, 0, 200);
+  fhBP        = tfs->make<TH1D>("hB_P",          ";#beta_{P}",     50, 0, 200);
+  fhGammaN    = tfs->make<TH1D>("hGamma_N",      ";#gamma_{N}",    50, 0, 200);
+  fhBN        = tfs->make<TH1D>("hB_N",          ";#beta_{N}",     50, 0, 200);
+  fhTN        = tfs->make<TH1D>("ht_N",          ";t_{N} (ns)",    50, 0, 200);
+  fhTNu       = tfs->make<TH1D>("ht_nu",         ";t_{#nu} (ns)",  50, 0, 200);
+  fhPoTf      = tfs->make<TH1D>("hPoT_f",        ";PoT",           50, 0, 200);
+}
+
+// =============================================================================
+// ComputeDetectorLimits – aggregate active volume from all TPCs
+// =============================================================================
+std::vector<double> evgen::HepMCFileGen::ComputeDetectorLimits() const
+{
+  double xMin =  std::numeric_limits<double>::max();
+  double xMax = -std::numeric_limits<double>::max();
+  double yMin =  std::numeric_limits<double>::max();
+  double yMax = -std::numeric_limits<double>::max();
+  double zMin =  std::numeric_limits<double>::max();
+  double zMax = -std::numeric_limits<double>::max();
+
+  for (const auto& tpc : fGeom->Iterate<geo::TPCGeo>()) {
+    const auto centre = tpc.GetCenter();
+    const double hw = tpc.HalfWidth();
+    const double hh = tpc.HalfHeight();
+    const double hl = 0.5 * tpc.Length();
+
+    xMin = std::min(xMin, centre.X() - hw);
+    xMax = std::max(xMax, centre.X() + hw);
+    yMin = std::min(yMin, centre.Y() - hh);
+    yMax = std::max(yMax, centre.Y() + hh);
+    zMin = std::min(zMin, centre.Z() - hl);
+    zMax = std::max(zMax, centre.Z() + hl);
   }
 
+  mf::LogInfo("HepMCFileGen")
+    << "Active volume (cm): "
+    << "X=[" << xMin << ", " << xMax << "]  "
+    << "Y=[" << yMin << ", " << yMax << "]  "
+    << "Z=[" << zMin << ", " << zMax << "]";
+
+  return {xMin, xMax, yMin, yMax, zMin, zMax};
 }
 
 DEFINE_ART_MODULE(evgen::HepMCFileGen)
