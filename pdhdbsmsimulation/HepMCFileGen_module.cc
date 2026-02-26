@@ -1,72 +1,42 @@
-////////////////////////////////////////////////////////////////////////
-//
-//// Class:       HepMCFileGen
-//// Module Type: producer
-//// File:         HepMCFileGen_module.cc
-////
-////
-//// Animesh Chatterjee
-////
-//////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// @file    HepMCFileGen_module.cc
+/// @brief   Generator module reading HepMC-style text files for HNL simulation.
+/// @authors Animesh Chatterjee (original author)
+///          Hamza Amar Es-sghir (fixing and refactoring, HNL extensions, ProtoDUNE-HD/NP04 BSM)
+///
+/// @date    2024–2026
+/// @version 2.0
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @class evgen::HepMCFileGen
  *
- *  This module assumes that the input file has the hepevt format for
- *  each event to be simulated. In brief each event contains at least two
- *  lines. The first line contains two entries, the event number (which is
- *  ignored in ART/LArSoft) and the number of particles in the event. Each
- *  following line containes 15 entries to describe each particle. The entries
- *  are:
+ * Reads an HNL-extended HepMC text file and produces `simb::MCTruth`
+ * objects for downstream Geant4 simulation in LArSoft.
  *
- *  1.  status code (should be set to 1 for any particle to be tracked, others
- *      won't be tracked)
- *  2.  the pdg code for the particle
- *  3.  the entry of the first mother for this particle in the event,
- *      0 means no mother
- *  4.  the entry of the second mother for this particle in the event,
- *      0 means no mother
- *  5. the entry of the first daughter for this particle in the event,
- *      0 means no daughter
- *  6. the entry of the second daughter for this particle in the event,
- *      0 means no daughter
- *  7. x component of the particle momentum
- *  8. y component of the particle momentum
- *  9. z component of the particle momentum
- *  10. energy of the particle
- *  11. mass of the particle
- *  12. x position of the particle initial position
- *  13. y position of the particle initial position
- *  14. z position of the particle initial position
- *  15. time of the particle production
+ * ### Input file format
  *
- *  For example, if you want to simulate a single muon with a 5 GeV energy
- *  moving only in the z direction, the entry would be (see onemuon.hepmc):
- *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- *  0 1
- *  1 13 0 0 0 0 0. 0. 1.0 5.0011 0.105 1.0 1.0 1.0 0.0
- *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- *  Or if you want to simulate a muon neutrino event (see oneneutrino.hepmc): 
- *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- *  0 3
- *  0 14 0 0 0 0 0.00350383 0.002469 0.589751 0.589766 0 208.939 63.9671 10.9272 4026.32
- *  1 13 1 0 0 0 -0.168856 -0.0498011 0.44465 0.489765 105.658 208.939 63.9671 10.9272 4026.32
- *  1 2212 1 0 0 0 0.151902 -0.124578 0.0497377 0.959907 938.272 208.939 63.9671 10.9272 4026.32
- *  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- *  here the first particle is the initial state neutrino (status code 0, meaning initial state, 
- *  not to be prooagated by GEANT). The other particles are the initial state particles.
- *  For the neutrino, write ccnc in place of 1st daugther, and mode (qe, res, ...) 
- *  in place of 2nd daugther.
+ * Each event block begins with a header line:
+ * ~~~
+ * ### <eventNo>
+ * ~~~
+ * followed by a line of 20 HNL production/decay parameters:
+ * ~~~
+ * Pw Nw M4 Ua4 Ln x0 y0 z0 thetaN phiN xf yf zf Gamma_PtoN B_P Gamma_N B_N t_N t_nu PoT_f
+ * ~~~
+ * and then one or more particle lines, the HNL daughters, with the format:
+ * ~~~
+ * PDG  E  px  py  pz
+ * ~~~
  *
- *  There are some assumptions that go into using this format that may not
- *  be obvious.  The first is that only particles with status code = 1
- *  are tracked in the LArSoft/Geant4 combination making the mother daughter
- *  relations somewhat irrelevant. That also means that you should let
- *  Geant4 handle any decays.
+ * Only particles with status code 1 are propagated by Geant4;
+ * let Geant4 handle any decays.
  *
- *  The units in LArSoft are cm for distances and ns for time.
- *  The use of `TLorentzVector` below does not imply space and time have the same units
- *   (do not use `TLorentzVector::Boost()`).
+ * ### Units
+ * - LArSoft uses **cm** for distances and **ns** for time.
+ * - Input positions (xf, yf, zf) are in **metres** and converted internally.
+ * - The use of `TLorentzVector` does not imply space and time share units
+ *   (do not call `TLorentzVector::Boost()`).
  */
 
 // LArSoft includes
