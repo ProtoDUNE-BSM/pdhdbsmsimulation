@@ -5,7 +5,7 @@
 ///          Hamza Amar Es-sghir (fixing and refactoring, HNL extensions, ProtoDUNE-HD/NP04 BSM)
 ///
 /// @date    2024–2026
-/// @version 2.0
+/// @version 3.0
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -81,7 +81,7 @@
 namespace evgen {
 
   // Conversion factor from metres (input file) to centimetres (LArSoft).
-  constexpr double kMtoCm = 100.0;
+  constexpr double MtoCm = 100.0;
 
   // Holds the 20 HNL production/decay parameters read per event.
   struct HNLParameters {
@@ -142,8 +142,9 @@ private:
   std::string                    fFilename;  // Path to HepMC input file
   std::unique_ptr<std::ifstream> fInputFile; // Input file stream (owned)
 
-  double fEventsPerPOT;    // Events-per-POT scaling factor
-  int    fEventsPerSubRun; // Processed event counter (reset per sub-run)
+  double       fEventsPerPOT;    // Events-per-POT scaling factor
+  int          fEventsPerSubRun; // Processed event counter (reset per sub-run)
+  unsigned int fEventsToSkip;    // Number of event records to skip at file start
 
   // --- Momentum histograms ---------------------------------------------------
   TH1D* fhPx          = nullptr;
@@ -199,6 +200,7 @@ evgen::HepMCFileGen::HepMCFileGen(fhicl::ParameterSet const& p)
   , fFilename{p.get<std::string>("filename")}
   , fEventsPerPOT{p.get<double>("EventsPerPOT", -1.0)}
   , fEventsPerSubRun{0}
+  , fEventsToSkip{p.get<unsigned int>("EventsToSkip", 0)}
 {
   fGeom = &*art::ServiceHandle<geo::Geometry>();
   fDetectorLimits = ComputeDetectorLimits();
@@ -219,6 +221,29 @@ void evgen::HepMCFileGen::beginJob()
   if (!fInputFile->good()) {
     throw cet::exception("HepMCFileGen")
       << "Input text file " << fFilename << " cannot be read.\n";
+  }
+
+  // Skip the requested number of events (by counting ### event records)
+  if (fEventsToSkip > 0) {
+    mf::LogInfo("HepMCFileGen")
+      << "Skipping " << fEventsToSkip << " events in " << fFilename << "...";
+
+    unsigned int skipped = 0;
+    std::string line;
+    while (skipped < fEventsToSkip && std::getline(*fInputFile, line)) {
+      if (line.rfind("###", 0) == 0) {
+        ++skipped;
+      }
+    }
+
+    if (skipped < fEventsToSkip) {
+      throw cet::exception("HepMCFileGen")
+        << "Requested to skip " << fEventsToSkip << " events, but file only contained "
+        << skipped << " events.\n";
+    }
+
+    mf::LogInfo("HepMCFileGen")
+      << "Successfully skipped " << skipped << " events. Next event will be processed.";
   }
 
   BookHistograms();
@@ -258,14 +283,30 @@ void evgen::HepMCFileGen::produce(art::Event& e)
   auto truthcol = std::make_unique<std::vector<simb::MCTruth>>();
   simb::MCTruth truth;
 
-  // --- Read event header (### eventNo) ---------------------------------------
+  // --- Read event header (skip any comment lines until ### <eventNo>, e.g., ####### Using MadGraph...) ---
   std::string line;
-  std::getline(*fInputFile, line);
-  std::istringstream iss(line);
-
   std::string hashToken;
+  std::istringstream iss;
   int eventNo = 0;
-  iss >> hashToken >> eventNo;
+  bool foundHeader = false;
+
+  while (std::getline(*fInputFile, line)) {
+    // Trim potential leading whitespace
+    if (line.rfind("###", 0) == 0) {
+      iss.clear();
+      iss.str(line);
+      if (iss >> hashToken >> eventNo) {
+        foundHeader = true;
+        break;
+      }
+    }
+  }
+
+  if (!foundHeader) {
+    throw cet::exception("HepMCFileGen")
+      << "End of file reached or no valid event header (### <eventNo>) found.\n";
+  }
+
   mf::LogInfo("HepMCFileGen") << "Event number: " << eventNo + 1;
 
   // --- Read HNL parameters (20 values) --------------------------------------
@@ -304,9 +345,9 @@ void evgen::HepMCFileGen::produce(art::Event& e)
       << ", Py=" << py << ", Pz=" << pz << " GeV/c";
 
     // Convert decay position from metres to cm; centre in z
-    const double posX = hnl.xf * kMtoCm;
-    const double posY = hnl.yf * kMtoCm;
-    const double posZ = hnl.zf * kMtoCm + zHalfLength;
+    const double posX = hnl.xf * MtoCm;
+    const double posY = hnl.yf * MtoCm;
+    const double posZ = hnl.zf * MtoCm + zHalfLength;
 
     MF_LOG_DEBUG("HepMCFileGen")
       << "  TPC Z length (cm): " << 2.0 * zHalfLength
